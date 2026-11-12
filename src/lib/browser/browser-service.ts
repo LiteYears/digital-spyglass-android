@@ -28,9 +28,12 @@ export interface DownloadedFileItem {
   timestamp: number;
 }
 
+export type WebGLMode = "standard" | "shielded" | "disabled";
+
 export interface BrowserRenderOptions {
   enableJs: boolean;
-  blockWebgl: boolean;
+  blockWebgl?: boolean;
+  webglMode?: WebGLMode;
   inlineTorAssets?: boolean;
 }
 
@@ -173,24 +176,63 @@ export function extractReaderText(html: string): string {
 }
 
 /**
- * Fetches external `<link rel="stylesheet">` and `<img src="...">` assets over
- * the native Tor SOCKS5 bridge so `.onion` stylesheets and images render inside
+ * Fetches external `<link rel="stylesheet">`, `<script src="...">`, and `<img>` assets over
+ * the Tor SOCKS5 bridge so `.onion` stylesheets, scripts, and images render inside
  * the Android WebView without clearnet or DNS leaks.
  */
 async function inlineOnionSubresources(
   rawHtml: string,
   baseUrl: string,
   socksConfig?: { host?: string; port?: number },
+  enableJs = true,
 ): Promise<string> {
-  if (!(await isNative())) return rawHtml;
-
+  const native = await isNative();
   let html = rawHtml;
   const creds = socksCredentialsForUrl(baseUrl);
   const ua = "Mozilla/5.0 (Android 10; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0";
 
-  // 1. Inline up to 6 external stylesheets
+  const fetchAsset = async (assetUrl: string): Promise<TorFetchResult | null> => {
+    if (native) {
+      try {
+        return await torFetch(assetUrl, ua, {
+          method: "GET",
+          allowAnyHttp: true,
+          browserMode: true,
+          socksAuth: {
+            user: creds.user,
+            pass: creds.pass,
+            host: socksConfig?.host,
+            port: socksConfig?.port,
+          },
+        });
+      } catch {
+        return null;
+      }
+    } else {
+      try {
+        const proxyResp = await fetch("/api/tor-fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: assetUrl, method: "GET" }),
+        });
+        if (proxyResp.ok) {
+          const json = (await proxyResp.json()) as { status?: number; body?: string; contentType?: string };
+          return {
+            status: json.status ?? 200,
+            body: json.body ?? "",
+            contentType: json.contentType ?? "text/plain",
+          };
+        }
+      } catch {
+        // ignore
+      }
+      return null;
+    }
+  };
+
+  // 1. Inline up to 10 external stylesheets
   const linkRegex = /<link\b[^>]*rel=["']?stylesheet["']?[^>]*>/gi;
-  const linkMatches = Array.from(html.matchAll(linkRegex)).slice(0, 6);
+  const linkMatches = Array.from(html.matchAll(linkRegex)).slice(0, 10);
   await Promise.all(
     linkMatches.map(async (m) => {
       const fullTag = m[0];
@@ -200,18 +242,8 @@ async function inlineOnionSubresources(
         const resolved = new URL(hrefMatch[1], baseUrl).href;
         let cssText = subresourceCache.get(resolved);
         if (cssText === undefined) {
-          const res = await torFetch(resolved, ua, {
-            method: "GET",
-            allowAnyHttp: true,
-            browserMode: true,
-            socksAuth: {
-              user: creds.user,
-              pass: creds.pass,
-              host: socksConfig?.host,
-              port: socksConfig?.port,
-            },
-          });
-          if (res.status >= 200 && res.status < 400 && res.body) {
+          const res = await fetchAsset(resolved);
+          if (res && res.status >= 200 && res.status < 400 && res.body) {
             cssText = res.body.replace(/<\/style/gi, "<\\/style");
             subresourceCache.set(resolved, cssText);
           }
@@ -225,9 +257,41 @@ async function inlineOnionSubresources(
     }),
   );
 
-  // 2. Inline up to 14 images (including captcha images on .onion search engines)
+  // 2. Inline external scripts when JavaScript is enabled (up to 8 essential scripts)
+  if (enableJs) {
+    const scriptRegex = /<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>([\s\S]*?)<\/script>/gi;
+    const scriptMatches = Array.from(html.matchAll(scriptRegex)).slice(0, 8);
+    await Promise.all(
+      scriptMatches.map(async (m) => {
+        const fullTag = m[0];
+        const rawSrc = m[1];
+        if (!rawSrc || rawSrc.startsWith("data:") || rawSrc.startsWith("blob:")) return;
+        try {
+          const resolved = new URL(rawSrc, baseUrl).href;
+          let scriptContent = subresourceCache.get(resolved);
+          if (scriptContent === undefined) {
+            const res = await fetchAsset(resolved);
+            if (res && res.status >= 200 && res.status < 400 && res.body) {
+              scriptContent = res.body.replace(/<\/script/gi, "<\\/script");
+              subresourceCache.set(resolved, scriptContent);
+            }
+          }
+          if (scriptContent) {
+            html = html.replace(
+              fullTag,
+              `<script data-tor-src="${resolved}">${scriptContent}</script>`,
+            );
+          }
+        } catch {
+          // Leave original script tag if fetch fails
+        }
+      }),
+    );
+  }
+
+  // 3. Inline up to 20 images (including captchas and icons)
   const imgRegex = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
-  const imgMatches = Array.from(html.matchAll(imgRegex)).slice(0, 14);
+  const imgMatches = Array.from(html.matchAll(imgRegex)).slice(0, 20);
   await Promise.all(
     imgMatches.map(async (m) => {
       const fullTag = m[0];
@@ -237,18 +301,8 @@ async function inlineOnionSubresources(
         const resolved = new URL(rawSrc, baseUrl).href;
         let dataUri = subresourceCache.get(resolved);
         if (!dataUri) {
-          const res = await torFetch(resolved, ua, {
-            method: "GET",
-            allowAnyHttp: true,
-            browserMode: true,
-            socksAuth: {
-              user: creds.user,
-              pass: creds.pass,
-              host: socksConfig?.host,
-              port: socksConfig?.port,
-            },
-          });
-          if (res.status >= 200 && res.status < 400 && res.base64) {
+          const res = await fetchAsset(resolved);
+          if (res && res.status >= 200 && res.status < 400 && res.base64) {
             const mime =
               res.contentType?.split(";")[0]?.trim() ||
               (resolved.endsWith(".svg")
@@ -277,73 +331,131 @@ async function inlineOnionSubresources(
 
 /**
  * Prepares HTML for safe rendering inside a sandboxed iframe:
- * - Injects WebGL, Canvas, AudioContext, and WebRTC fingerprint shields (when blockWebgl is enabled)
- * - Injects `<base href="...">` and responsive dark/light readable styling
+ * - Injects WebGL, Canvas, and WebRTC fingerprint controls according to webglMode ("standard", "shielded", "disabled")
+ * - Injects `<base href="...">`, responsive typography and touch-smooth scrolling
+ * - Injects AJAX / fetch postMessage bridge so in-page requests route through Tor
  * - Intercepts `<a>` clicks and both GET/POST `<form>` submissions so all navigation stays inside Tor
+ * - Injects ResizeObserver for auto-height calculation
  */
 export function prepareSandboxedHtml(
   rawHtml: string,
   baseUrl: string,
   enableJs: boolean,
-  blockWebgl = true,
+  webglModeOrBlock: WebGLMode | boolean = "shielded",
 ): string {
+  const mode: WebGLMode =
+    typeof webglModeOrBlock === "boolean"
+      ? webglModeOrBlock
+        ? "shielded"
+        : "standard"
+      : webglModeOrBlock;
+
   let html = rawHtml;
   if (!enableJs) {
     html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
   }
 
   const escapedBase = baseUrl.replace(/"/g, "&quot;");
-  const fingerprintShieldScript = blockWebgl
-    ? `
-  // Tor Browser Hardened WebGL / Canvas / WebRTC / AudioContext Anti-Fingerprinting Shield
-  try {
-    var origGetContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function(type, attrs) {
-      if (type && /webgl|experimental-webgl|webgl2|webgpu/i.test(String(type))) {
-        return null;
-      }
-      return origGetContext.call(this, type, attrs);
-    };
-    if (typeof OffscreenCanvas !== "undefined") {
-      var origOffscreen = OffscreenCanvas.prototype.getContext;
-      OffscreenCanvas.prototype.getContext = function(type, attrs) {
+
+  let webglScript = "";
+  if (mode === "shielded") {
+    // Tor Browser hardened WebGL / Canvas / WebRTC spoofing & anti-fingerprinting
+    webglScript = `
+    // WebGL Shield (Tor Browser standard: context allowed, GPU unmasked strings spoofed)
+    try {
+      var origGetContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+        var ctx = origGetContext.call(this, type, attrs);
+        if (!ctx) return ctx;
+        if (type && /webgl|experimental-webgl|webgl2/i.test(String(type))) {
+          var origGetParam = ctx.getParameter ? ctx.getParameter.bind(ctx) : null;
+          if (origGetParam) {
+            ctx.getParameter = function(pname) {
+              if (pname === 0x9245) return "Google Inc. (Tor Browser)";
+              if (pname === 0x9246) return "ANGLE (Software Rasterizer Direct3D11 / Mesa DRI)";
+              if (pname === 0x1F00) return "WebKit";
+              if (pname === 0x1F01) return "WebKit WebGL";
+              return origGetParam(pname);
+            };
+          }
+          var origGetExt = ctx.getExtension ? ctx.getExtension.bind(ctx) : null;
+          if (origGetExt) {
+            ctx.getExtension = function(name) {
+              var ext = origGetExt(name);
+              if (name === "WEBGL_debug_renderer_info" && ext) {
+                return {
+                  UNMASKED_VENDOR_WEBGL: 0x9245,
+                  UNMASKED_RENDERER_WEBGL: 0x9246
+                };
+              }
+              return ext;
+            };
+          }
+        }
+        return ctx;
+      };
+      // Block WebRTC local IP leak vectors
+      window.RTCPeerConnection = undefined;
+      window.webkitRTCPeerConnection = undefined;
+      window.RTCDataChannel = undefined;
+      // Baseline browser fingerprint normalization
+      try {
+        Object.defineProperty(navigator, "hardwareConcurrency", { get: function() { return 4; } });
+        Object.defineProperty(navigator, "deviceMemory", { get: function() { return 4; } });
+        Object.defineProperty(navigator, "webdriver", { get: function() { return false; } });
+      } catch (e) {}
+    } catch (e) {}
+    `;
+  } else if (mode === "disabled") {
+    webglScript = `
+    try {
+      var origGetContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function(type, attrs) {
         if (type && /webgl|experimental-webgl|webgl2|webgpu/i.test(String(type))) {
           return null;
         }
-        return origOffscreen.call(this, type, attrs);
+        return origGetContext.call(this, type, attrs);
       };
-    }
-    // Block WebRTC IP leak vectors
-    window.RTCPeerConnection = undefined;
-    window.webkitRTCPeerConnection = undefined;
-    window.RTCDataChannel = undefined;
-    // Spoof hardware concurrency & device memory to Tor Browser Android baseline
-    Object.defineProperty(navigator, "hardwareConcurrency", { get: function() { return 2; } });
-    Object.defineProperty(navigator, "deviceMemory", { get: function() { return 2; } });
-    Object.defineProperty(navigator, "webdriver", { get: function() { return false; } });
-  } catch (e) {}
-`
-    : "";
+      window.RTCPeerConnection = undefined;
+      window.webkitRTCPeerConnection = undefined;
+    } catch (e) {}
+    `;
+  } else {
+    // standard: Native WebGL and Canvas enabled without interception
+    webglScript = `
+    try {
+      // Standard WebGL enabled — protect WebRTC from IP leakage
+      window.RTCPeerConnection = undefined;
+      window.webkitRTCPeerConnection = undefined;
+    } catch (e) {}
+    `;
+  }
 
   const injectedHead = `
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
 <base href="${escapedBase}" />
 <style>
   :root { color-scheme: dark light; }
   html, body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.6;
     margin: 0;
     padding: 12px;
+    min-height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    -webkit-overflow-scrolling: touch;
+    color: #e2e8f0;
+    background-color: #0b0f17;
   }
   img, video, canvas, svg, iframe, pre, table { max-width: 100%; height: auto; }
-  pre, code { overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.9em; }
+  pre, code { overflow-x: auto; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; }
   a { color: #f59e0b; text-decoration: underline; }
-  input, select, textarea, button {
+  :where(input, select, textarea, button) {
     font: inherit;
     padding: 6px 10px;
     border-radius: 6px;
@@ -351,7 +463,7 @@ export function prepareSandboxedHtml(
     background: rgba(15, 23, 42, 0.85);
     color: #f8fafc;
   }
-  button, input[type="submit"] {
+  :where(button, input[type="submit"]) {
     background: #f59e0b;
     color: #090d16;
     font-weight: 600;
@@ -359,7 +471,54 @@ export function prepareSandboxedHtml(
   }
 </style>
 <script>
-  ${fingerprintShieldScript}
+  ${webglScript}
+
+  // Transparent in-page fetch bridge routing through Tor parent container
+  (function() {
+    var origFetch = window.fetch;
+    window.fetch = function(resource, init) {
+      try {
+        var urlStr = typeof resource === "string" ? resource : (resource && resource.url ? resource.url : "");
+        if (!urlStr) return origFetch ? origFetch.apply(this, arguments) : Promise.reject(new Error("Empty fetch URL"));
+        var resolved = new URL(urlStr, document.baseURI).href;
+        var method = (init && init.method ? init.method : "GET").toUpperCase();
+        var body = init && init.body ? (typeof init.body === "string" ? init.body : JSON.stringify(init.body)) : undefined;
+        var reqId = "req_" + Math.random().toString(36).slice(2, 9);
+        return new Promise(function(resolve, reject) {
+          var timer = setTimeout(function() {
+            window.removeEventListener("message", onFetchMsg);
+            reject(new Error("Tor fetch timeout"));
+          }, 35000);
+          function onFetchMsg(ev) {
+            if (ev.data && ev.data.type === "ghost-browser-ajax-res" && ev.data.id === reqId) {
+              clearTimeout(timer);
+              window.removeEventListener("message", onFetchMsg);
+              if (ev.data.error) {
+                reject(new Error(ev.data.error));
+              } else {
+                resolve(new Response(ev.data.body || "", {
+                  status: ev.data.status || 200,
+                  headers: { "Content-Type": ev.data.contentType || "application/json" }
+                }));
+              }
+            }
+          }
+          window.addEventListener("message", onFetchMsg);
+          window.parent.postMessage({
+            type: "ghost-browser-ajax",
+            id: reqId,
+            url: resolved,
+            method: method,
+            body: body
+          }, "*");
+        });
+      } catch (err) {
+        return origFetch ? origFetch.apply(this, arguments) : Promise.reject(err);
+      }
+    };
+  })();
+
+  // Intercept anchor clicks to keep browsing inside Tor
   document.addEventListener("click", function(e) {
     var target = e.target;
     while (target && target.tagName !== "A") {
@@ -377,6 +536,7 @@ export function prepareSandboxedHtml(
     }
   }, true);
 
+  // Intercept GET and POST forms to keep requests inside Tor
   document.addEventListener("submit", function(e) {
     var form = e.target;
     if (!form || form.tagName !== "FORM") return;
@@ -410,6 +570,19 @@ export function prepareSandboxedHtml(
       }
     } catch (err) {}
   }, true);
+
+  // Auto-report document height for seamless iframe expansion
+  if (typeof ResizeObserver !== "undefined") {
+    var resizeTimer;
+    var ro = new ResizeObserver(function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        var h = Math.max(document.body ? document.body.scrollHeight : 0, document.documentElement.scrollHeight);
+        window.parent.postMessage({ type: "ghost-iframe-height", height: h }, "*");
+      }, 60);
+    });
+    ro.observe(document.documentElement);
+  }
 </script>
 `;
 
@@ -422,7 +595,12 @@ export function prepareSandboxedHtml(
 export async function fetchBrowserUrl(
   rawUrl: string,
   socksConfig?: { host?: string; port?: number },
-  requestOptions?: { method?: "GET" | "POST"; body?: string; inlineSubresources?: boolean },
+  requestOptions?: {
+    method?: "GET" | "POST";
+    body?: string;
+    inlineSubresources?: boolean;
+    enableJs?: boolean;
+  },
 ): Promise<BrowserPageResponse> {
   const url = normalizeBrowserUrl(rawUrl);
   if (!url) throw new Error("Empty URL");
@@ -498,7 +676,12 @@ export async function fetchBrowserUrl(
   const downloadable = isBinaryOrAttachment(contentType, url);
 
   if (!downloadable && (requestOptions?.inlineSubresources ?? true)) {
-    body = await inlineOnionSubresources(body, url, socksConfig);
+    body = await inlineOnionSubresources(
+      body,
+      url,
+      socksConfig,
+      requestOptions?.enableJs ?? true,
+    );
   }
 
   const sizeBytes = res.base64

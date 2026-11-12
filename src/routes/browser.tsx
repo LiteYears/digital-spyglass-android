@@ -26,7 +26,7 @@ export const Route = createFileRoute("/browser")({
 function BrowserScreen() {
   const { url } = Route.useSearch();
   return (
-    <AppShell heading="Ghost built-in Tor browser and secure file downloader">
+    <AppShell heading="Ghost built-in Tor browser and secure file downloader" fullBleed>
       <InAppBrowser initialUrl={url} />
     </AppShell>
   );

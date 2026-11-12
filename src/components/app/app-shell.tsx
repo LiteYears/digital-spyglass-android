@@ -89,19 +89,21 @@ export function TopBar({ children }: { children?: ReactNode }) {
   const { settings, updateSettings, egressOk, bookmarks, purgeNow } = useGhost();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showConfirmWipe, setShowConfirmWipe] = useState(false);
 
   const vpnSignal: Signal = egressOk ? "green" : settings.requireVpn ? "red" : "amber";
 
   const handlePanicWipe = async () => {
     await purgeNow();
+    setShowConfirmWipe(false);
     setMenuOpen(false);
     toast.success("Session RAM, cookies, and downloads wiped clean");
   };
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b border-border-subtle bg-background/88 backdrop-blur-xl safe-top">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-3.5 py-2">
+      <header className="sticky top-0 z-20 border-b border-border-subtle bg-background/90 backdrop-blur-xl safe-top">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2">
           <Link to="/" className="tap flex min-h-11 items-center gap-2.5">
             <span
               aria-hidden
@@ -121,7 +123,7 @@ export function TopBar({ children }: { children?: ReactNode }) {
                 Ghost
               </span>
               <span className="mt-0.5 font-mono text-[9px] uppercase tracking-widest text-dim">
-                stateless · ram-only
+                Tor OSINT · RAM-Only
               </span>
             </span>
           </Link>
@@ -133,25 +135,25 @@ export function TopBar({ children }: { children?: ReactNode }) {
               title="Inspect Tor & VPN security status"
             >
               <Dot signal={vpnSignal} />
-              <span>{egressOk ? "Tor / VPN" : "No VPN"}</span>
+              <span className="hidden xs:inline">{egressOk ? "Tor / VPN" : "No VPN"}</span>
             </Link>
 
             <button
               type="button"
-              onClick={() => void handlePanicWipe()}
+              onClick={() => setShowConfirmWipe(true)}
               aria-label="Instant Panic Wipe (Purge RAM)"
               title="Instant Panic Wipe (Purge RAM)"
               className="tap flex min-h-9 items-center gap-1 rounded-md border border-signal-red/40 bg-signal-red/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-signal-red hover:bg-signal-red/25 transition-colors"
             >
               <Flame className="size-3.5" />
-              <span className="hidden sm:inline">Wipe</span>
+              <span className="hidden sm:inline">Panic Wipe</span>
             </button>
 
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Open quick navigation and posture menu"
-              className="tap flex size-9 items-center justify-center rounded-md border border-border-subtle bg-elevated text-foreground hover:border-amber/40 hover:text-amber"
+              className="tap flex size-9 items-center justify-center rounded-md border border-border-subtle bg-elevated text-foreground hover:border-amber/40 hover:text-amber transition-colors"
             >
               {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
@@ -160,6 +162,46 @@ export function TopBar({ children }: { children?: ReactNode }) {
         {children}
       </header>
 
+      {/* Confirmation Modal for Panic Wipe to prevent accidental trigger */}
+      {showConfirmWipe && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm animate-rise"
+          onClick={() => setShowConfirmWipe(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-lg border border-signal-red/60 bg-panel p-5 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5 text-signal-red">
+              <Flame className="size-5 shrink-0" />
+              <p className="font-mono text-sm font-semibold uppercase tracking-wider">
+                Emergency Panic Wipe?
+              </p>
+            </div>
+            <p className="font-mono text-xs text-dim leading-relaxed">
+              This will immediately purge all RAM queries, search results, onion browser session cookies, and in-memory download caches.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmWipe(false)}
+                className="tap rounded-md border border-border-subtle bg-elevated px-3 py-1.5 font-mono text-xs text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handlePanicWipe()}
+                className="tap flex items-center gap-1.5 rounded-md border border-signal-red/60 bg-signal-red/30 px-3 py-1.5 font-mono text-xs font-semibold text-signal-red hover:bg-signal-red/40"
+              >
+                <Flame className="size-3.5" />
+                <span>Wipe Everything</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Organized Quick Command & Navigation Menu Drawer */}
       {menuOpen && (
         <div
@@ -167,7 +209,7 @@ export function TopBar({ children }: { children?: ReactNode }) {
           onClick={() => setMenuOpen(false)}
         >
           <div
-            className="mx-auto mt-14 max-h-[82dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-lg border border-border-active bg-panel p-4 shadow-2xl space-y-4"
+            className="mx-auto mt-14 max-h-[84dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-lg border border-border-active bg-panel p-4 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-border-subtle pb-2.5">
@@ -175,7 +217,7 @@ export function TopBar({ children }: { children?: ReactNode }) {
                 <p className="font-mono text-xs font-semibold uppercase tracking-widest text-amber">
                   Ghost Command Menu
                 </p>
-                <MicroLabel>Quick navigation, privacy posture & session tools</MicroLabel>
+                <MicroLabel>Quick navigation, browsing & session tools</MicroLabel>
               </div>
               <button
                 type="button"
@@ -210,7 +252,33 @@ export function TopBar({ children }: { children?: ReactNode }) {
               </div>
             </div>
 
-            {/* Section 2: Privacy & Speed Posture Toggles */}
+            {/* Section 2: Quick Onion Launchers */}
+            <div className="space-y-1.5">
+              <MicroLabel>Quick Onion Search Launchers</MicroLabel>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { name: "Ahmia Search", url: "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion" },
+                  { name: "Torch Indexer", url: "http://torchde3p3spjgaroxmngafla Enum6o2r42xgepjx.onion" },
+                  { name: "Haystak Deep", url: "http://haystak5njsmn2hqkewecpaxetaqwhsxdpdqlxspjfdmgodnbgahopyd.onion" },
+                  { name: "Excava Engine", url: "http://excavator5c6x2vsxfnax5fq7ezgaheb3umgg7hxauvdqeuipfcvpjyd.onion" },
+                ].map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void navigate({ to: "/browser", search: { url: item.url } });
+                    }}
+                    className="tap flex items-center justify-between rounded-md border border-border-subtle bg-elevated/40 p-2 text-left font-mono text-xs hover:border-amber/40 hover:text-amber transition-colors"
+                  >
+                    <span className="truncate">{item.name}</span>
+                    <Globe className="size-3 text-amber shrink-0 ml-1" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 3: Privacy & Speed Posture Toggles */}
             <div className="space-y-1.5">
               <MicroLabel>Session Posture Controls</MicroLabel>
               <div className="grid grid-cols-2 gap-2">
@@ -259,12 +327,12 @@ export function TopBar({ children }: { children?: ReactNode }) {
                   className="tap flex items-center justify-between rounded-md border border-amber/40 bg-amber/10 p-2.5 text-left font-mono text-xs text-amber hover:bg-amber/20"
                 >
                   <span>Orbot Tor VPN</span>
-                  <span>Open</span>
+                  <span>Launch</span>
                 </button>
               </div>
             </div>
 
-            {/* Section 3: Saved Session Bookmarks */}
+            {/* Section 4: Saved Session Bookmarks */}
             {bookmarks.length > 0 && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -303,15 +371,15 @@ export function TopBar({ children }: { children?: ReactNode }) {
               </div>
             )}
 
-            {/* Section 4: Emergency Session Purge */}
+            {/* Section 5: Emergency Session Purge */}
             <div className="border-t border-border-subtle pt-3">
               <button
                 type="button"
-                onClick={() => void handlePanicWipe()}
-                className="tap flex w-full items-center justify-center gap-2 rounded-md border border-signal-red/50 bg-signal-red/20 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-signal-red hover:bg-signal-red/30"
+                onClick={() => setShowConfirmWipe(true)}
+                className="tap flex w-full items-center justify-center gap-2 rounded-md border border-signal-red/50 bg-signal-red/20 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-signal-red hover:bg-signal-red/30 transition-colors"
               >
                 <Flame className="size-4" />
-                <span>Panic Wipe Session RAM & Cookies Now</span>
+                <span>Panic Wipe Session RAM & Cookies</span>
               </button>
             </div>
           </div>
@@ -325,17 +393,28 @@ export function AppShell({
   children,
   bar,
   heading,
+  fullBleed = false,
 }: {
   children: ReactNode;
   bar?: ReactNode;
   heading: string;
+  fullBleed?: boolean;
 }) {
   return (
     <>
       <h1 className="sr-only">{heading}</h1>
-      <div className="grid-canvas min-h-dvh bg-background pb-24">
+      <div className="grid-canvas min-h-dvh bg-background pb-20 sm:pb-24">
         <TopBar>{bar}</TopBar>
-        <main className="mx-auto max-w-3xl space-y-3.5 px-3.5 py-3.5">{children}</main>
+        <main
+          className={cn(
+            "mx-auto",
+            fullBleed
+              ? "max-w-5xl px-2 py-2 sm:px-3 sm:py-2.5"
+              : "max-w-3xl space-y-3.5 px-3.5 py-3.5",
+          )}
+        >
+          {children}
+        </main>
         <BottomNav />
         <VpnGate />
         <PersonaGate />

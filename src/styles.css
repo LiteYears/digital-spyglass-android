@@ -139,13 +139,14 @@
     font-family: var(--font-sans-stack);
     -webkit-tap-highlight-color: transparent;
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+    touch-action: manipulation;
     overflow-x: hidden;
   }
 
   body {
     font-feature-settings: "cv11", "ss01";
     min-height: 100dvh;
+    overscroll-behavior-y: none;
   }
 
   input,
