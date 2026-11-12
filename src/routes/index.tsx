@@ -10,6 +10,7 @@ import {
   Share2,
   Square,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -303,13 +304,26 @@ function SearchScreen() {
             if (query.trim().length > 0) run.mutate();
           }}
         >
-          <ConsoleInput
-            value={query}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="query · nothing is stored"
-            inputMode="search"
-            enterKeyHint="search"
-          />
+          <div className="relative flex-1">
+            <ConsoleInput
+              value={query}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="query · nothing is stored"
+              inputMode="search"
+              enterKeyHint="search"
+              className={query.length > 0 ? "pr-8" : ""}
+            />
+            {query.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear query"
+                className="tap absolute right-2.5 top-1/2 -translate-y-1/2 text-dim hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
           <ActionButton
             type="submit"
             variant="primary"
@@ -720,10 +734,36 @@ function SearchScreen() {
         )}
 
         {!outcome && !run.isPending && (
-          <EmptyState
-            title="No session data"
-            hint="Type a query. Results are aggregated from onion search engines, ranked by RRF agreement, and never written to disk."
-          />
+          <div className="space-y-3">
+            <EmptyState
+              title="No session data"
+              hint="Type a query. Results are aggregated from onion search engines, ranked by RRF agreement, and never written to disk."
+            />
+            <div className="rounded-md border border-border-subtle bg-elevated/40 p-3">
+              <MicroLabel className="mb-2 block text-dim">Quick query templates</MicroLabel>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "site:.onion",
+                  "PGP key",
+                  "cybersecurity",
+                  "threat intel",
+                  "mirrors",
+                  "whonix",
+                ].map((sample) => (
+                  <button
+                    key={sample}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(sample);
+                    }}
+                    className="tap rounded-md border border-border-subtle bg-panel/70 px-2.5 py-1 font-mono text-xs text-foreground/80 transition-colors hover:border-amber/50 hover:text-amber"
+                  >
+                    {sample}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {outcome && rows.length === 0 && (

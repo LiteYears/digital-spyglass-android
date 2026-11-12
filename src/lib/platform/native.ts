@@ -52,10 +52,28 @@ export type TransportInfo = {
  */
 type VpnPlugin = {
   isVpnActive: () => Promise<{ active: boolean }>;
+  isTorSocksReachable?: (opts?: { host?: string; port?: number }) => Promise<{ reachable: boolean }>;
   isVirtualDevice: () => Promise<{ isVirtual: boolean }>;
 };
 
 let vpnPlugin: VpnPlugin | null = null;
+
+export async function checkTorSocks(host = "127.0.0.1", port = 9050): Promise<boolean> {
+  if (!(await isNative())) return true;
+  try {
+    if (!vpnPlugin) {
+      const { registerPlugin } = await import("@capacitor/core");
+      vpnPlugin = registerPlugin<VpnPlugin>("PianoVpn");
+    }
+    if (vpnPlugin.isTorSocksReachable) {
+      const res = await vpnPlugin.isTorSocksReachable({ host, port });
+      return res.reachable;
+    }
+  } catch {
+    /* fallback */
+  }
+  return false;
+}
 
 export async function readTransport(): Promise<TransportInfo> {
   if (!(await isNative())) {

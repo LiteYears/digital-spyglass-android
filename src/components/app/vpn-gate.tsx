@@ -72,21 +72,31 @@ export function VpnGate() {
           </details>
         </div>
         <div className="w-full space-y-2">
-          <ActionButton
-            variant="primary"
-            pending={checking}
-            onClick={() => {
-              setChecking(true);
-              void refreshTransport().finally(() => setChecking(false));
-            }}
-          >
-            {checking ? "checking…" : "Re-check Tor"}
-          </ActionButton>
-          {torOk === false && (
-            <ActionButton onClick={() => void updateSettings({ requireVpn: false })}>
-              Tor probe failed — continue anyway
+          {transport.connectionType === "web" ? (
+            <ActionButton
+              variant="primary"
+              onClick={() => void updateSettings({ requireVpn: false })}
+            >
+              Enter Web Preview Mode (Continue)
+            </ActionButton>
+          ) : (
+            <ActionButton
+              variant="primary"
+              pending={checking}
+              onClick={() => {
+                setChecking(true);
+                void refreshTransport().finally(() => setChecking(false));
+              }}
+            >
+              {checking ? "checking transport…" : "Re-check Tor Transport"}
             </ActionButton>
           )}
+          <ActionButton
+            variant="default"
+            onClick={() => void updateSettings({ requireVpn: false })}
+          >
+            Bypass VPN gate (Continue anyway)
+          </ActionButton>
         </div>
       </div>
     </div>

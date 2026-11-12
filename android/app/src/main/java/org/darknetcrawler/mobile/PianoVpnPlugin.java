@@ -14,9 +14,14 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 import android.provider.Settings;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Locale;
 
 @CapacitorPlugin(name = "PianoVpn")
 public class PianoVpnPlugin extends Plugin {
@@ -31,6 +36,41 @@ public class PianoVpnPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("VPN check failed", e);
         }
+    }
+
+    @PluginMethod
+    public void isTorSocksReachable(PluginCall call) {
+        String host = call.getString("host", "127.0.0.1");
+        Integer portObj = call.getInt("port");
+        int targetPort = (portObj != null && portObj >= 1 && portObj <= 65535) ? portObj : 9050;
+        int[] portsToTry = (targetPort == 9050 && "127.0.0.1".equals(host))
+                ? new int[]{9050, 9150} : new int[]{targetPort};
+        new Thread(() -> {
+            boolean reachable = false;
+            int activePort = targetPort;
+            for (int p : portsToTry) {
+                try (Socket socket = new Socket()) {
+                    socket.connect(new InetSocketAddress(host, p), 2000);
+                    socket.setSoTimeout(2000);
+                    OutputStream out = socket.getOutputStream();
+                    InputStream in = socket.getInputStream();
+                    out.write(new byte[]{0x05, 0x01, 0x00});
+                    out.flush();
+                    int ver = in.read();
+                    int method = in.read();
+                    if (ver == 0x05) {
+                        reachable = true;
+                        activePort = p;
+                        break;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            JSObject ret = new JSObject();
+            ret.put("reachable", reachable);
+            ret.put("port", activePort);
+            call.resolve(ret);
+        }, "PianoVpn-SocksCheck").start();
     }
 
     @PluginMethod
@@ -64,21 +104,31 @@ public class PianoVpnPlugin extends Plugin {
     }
 
     /**
-     * Method 1: Check all networks for TRANSPORT_VPN.
-     * Works for full-device VPN, may fail for per-app VPN if our app's UID
-     * is not in the VPN's allowed list (Android hides those networks).
+     * Method 1: Check active network and all networks for TRANSPORT_VPN.
      */
     private boolean checkTransportVpn() {
         try {
             ConnectivityManager cm =
                     (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm == null) return false;
-            Network[] networks = cm.getAllNetworks();
-            if (networks == null) return false;
-            for (Network net : networks) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(net);
-                if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+
+            // Direct check on active network
+            Network activeNet = cm.getActiveNetwork();
+            if (activeNet != null) {
+                NetworkCapabilities activeCaps = cm.getNetworkCapabilities(activeNet);
+                if (activeCaps != null && activeCaps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                     return true;
+                }
+            }
+
+            // Check across all registered networks
+            Network[] networks = cm.getAllNetworks();
+            if (networks != null) {
+                for (Network net : networks) {
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(net);
+                    if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -88,35 +138,15 @@ public class PianoVpnPlugin extends Plugin {
     }
 
     /**
-     * Method 2: Check for a TUN network interface (tun0, tun1, etc.).
-     * Orbot and other VPN apps create a TUN interface when the VPN is active.
-     * This works regardless of per-app VPN UID restrictions because
-     * NetworkInterface enumeration is not UID-filtered.
+     * Method 2: Check for active TUN network interfaces (tun0, tun1, etc.).
      */
     private boolean checkTunInterface() {
-        // A bare tun\d+ match cannot attribute the tunnel to Orbot — any
-        // co-resident VPN app (e.g. PCAPdroid) satisfies it (Beam audit F12).
-        // When the system always-on VPN package is known, only count a tun
-        // interface if that package is Orbot; otherwise the tunnel is almost
-        // certainly the other app's. If always-on is unset, keep the
-        // heuristic (tun attribution is not exposed to apps).
-        try {
-            String alwaysOn = Settings.Secure.getString(
-                getContext().getContentResolver(),
-                "always_on_vpn_package"
-            );
-            if (alwaysOn != null && !alwaysOn.equals("org.torproject.android")) {
-                return false;
-            }
-        } catch (Exception e) {
-            /* setting unreadable — fall back to heuristic */
-        }
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             if (interfaces == null) return false;
             for (NetworkInterface nif : Collections.list(interfaces)) {
                 String name = nif.getName();
-                if (name != null && name.matches("tun\\d+") && nif.isUp()) {
+                if (name != null && name.toLowerCase(Locale.ROOT).matches("tun\\d*|ppp\\d*|wg\\d*") && nif.isUp()) {
                     return true;
                 }
             }

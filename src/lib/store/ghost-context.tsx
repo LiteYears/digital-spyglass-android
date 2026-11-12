@@ -312,7 +312,11 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   }, [settings.paranoidMode]);
 
   const value = useMemo<GhostContextValue>(() => {
-    const egressOk = !settings.requireVpn || torOk === true;
+    const egressOk =
+      !settings.requireVpn ||
+      torOk === true ||
+      transport.vpnActive === true ||
+      transport.connectionType === "web";
     return {
       ready,
       settings,

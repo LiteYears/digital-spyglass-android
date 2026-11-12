@@ -95,9 +95,13 @@ export function TopBar({ children }: { children?: ReactNode }) {
             </span>
           </span>
         </Link>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-dim">
+        <Link
+          to="/security"
+          className="tap flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-dim hover:text-amber transition-colors"
+          title="Inspect Tor & VPN security status"
+        >
           <Dot signal={vpnSignal} /> vpn
-        </span>
+        </Link>
       </div>
       {children}
     </header>

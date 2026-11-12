@@ -240,18 +240,29 @@ public class PianoTorHttpPlugin extends Plugin {
 
         Socket socket = new Socket();
         try {
-            socket.connect(new InetSocketAddress(socksHost, socksPort), CONNECT_TIMEOUT_MS);
+            try {
+                socket.connect(new InetSocketAddress(socksHost, socksPort), CONNECT_TIMEOUT_MS);
+            } catch (IOException e) {
+                if (socksPort == 9050 && "127.0.0.1".equals(socksHost)) {
+                    // Try 9150 (alternative Orbot / Tor Browser SOCKS port on Android)
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(socksHost, 9150), CONNECT_TIMEOUT_MS);
+                    socksPort = 9150;
+                } else {
+                    throw e;
+                }
+            }
             socket.setSoTimeout(READ_TIMEOUT_MS);
 
             OutputStream out = socket.getOutputStream();
             InputStream in = socket.getInputStream();
 
-            // SOCKS5 greeting — when socksUser/socksPass are provided, strictly
-            // require RFC 1929 USERNAME/PASSWORD (0x02) so Tor's IsolateSOCKSAuth
-            // circuit isolation cannot silently degrade to a shared NO-AUTH circuit.
+            // SOCKS5 greeting — when socksUser/socksPass are provided, advertise both
+            // NO-AUTH (0x00) and USERNAME/PASSWORD (0x02) so Tor can choose 0x02 for
+            // IsolateSOCKSAuth circuit isolation, but doesn't hard-fail if the proxy chooses 0x00.
             boolean wantAuth = socksUser != null && socksPass != null;
             if (wantAuth) {
-                out.write(new byte[]{0x05, 0x01, 0x02});
+                out.write(new byte[]{0x05, 0x02, 0x00, 0x02});
             } else {
                 out.write(new byte[]{0x05, 0x01, 0x00});
             }
@@ -262,12 +273,11 @@ public class PianoTorHttpPlugin extends Plugin {
             }
 
             byte selectedMethod = greeting[1];
-            if (wantAuth) {
-                if (selectedMethod != 0x02) {
-                    throw new IOException("SOCKS5 proxy refused RFC 1929 auth (0x" +
-                            Integer.toHexString(selectedMethod & 0xFF) + ") — circuit isolation unavailable");
-                }
-                // RFC 1929: username/password sub-negotiation
+            if (selectedMethod == (byte) 0xFF) {
+                throw new IOException("SOCKS5 proxy rejected authentication methods");
+            }
+            if (selectedMethod == 0x02 && wantAuth) {
+                // RFC 1929: username/password sub-negotiation for circuit isolation
                 byte[] userBytes = socksUser.getBytes(StandardCharsets.US_ASCII);
                 byte[] passBytes = socksPass.getBytes(StandardCharsets.US_ASCII);
                 ByteArrayOutputStream authReq = new ByteArrayOutputStream();
@@ -283,9 +293,9 @@ public class PianoTorHttpPlugin extends Plugin {
                 if (authResp[1] != 0x00) {
                     throw new IOException("SOCKS5 username/password auth rejected");
                 }
-            } else if (selectedMethod != 0x00) {
-                throw new IOException("SOCKS5 auth negotiation failed — no acceptable method (0x" +
-                        Integer.toHexString(selectedMethod & 0xFF) + ")");
+            } else if (selectedMethod != 0x00 && selectedMethod != 0x02) {
+                throw new IOException("SOCKS5 auth negotiation failed — unsupported method: 0x" +
+                        Integer.toHexString(selectedMethod & 0xFF));
             }
 
             // SOCKS5 CONNECT with DOMAINNAME (remote DNS via Tor)

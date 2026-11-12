@@ -515,6 +515,36 @@ function SecurityScreen() {
                 }
               />
             </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  void updateSettings({ torSocksHost: "127.0.0.1", torSocksPort: "9050" });
+                  toast.success("Tor SOCKS set to Orbot default (127.0.0.1:9050)");
+                }}
+                className={`tap rounded px-2 py-0.5 text-[10px] font-mono transition-colors ${settings.torSocksPort === "9050" ? "bg-amber/20 text-amber" : "bg-foreground/10 text-foreground/70"}`}
+              >
+                9050 (Orbot)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void updateSettings({ torSocksHost: "127.0.0.1", torSocksPort: "9150" });
+                  toast.success("Tor SOCKS set to Tor Browser (127.0.0.1:9150)");
+                }}
+                className={`tap rounded px-2 py-0.5 text-[10px] font-mono transition-colors ${settings.torSocksPort === "9150" ? "bg-amber/20 text-amber" : "bg-foreground/10 text-foreground/70"}`}
+              >
+                9150 (Tor Browser)
+              </button>
+              <button
+                type="button"
+                onClick={() => void runTorCheck()}
+                disabled={torStatus === "checking"}
+                className="tap rounded bg-amber/15 px-2 py-0.5 text-[10px] font-mono text-amber hover:bg-amber/25 disabled:opacity-50"
+              >
+                {torStatus === "checking" ? "testing…" : "test now"}
+              </button>
+            </div>
           </div>
           <Toggle
             label="Purge on screen lock"

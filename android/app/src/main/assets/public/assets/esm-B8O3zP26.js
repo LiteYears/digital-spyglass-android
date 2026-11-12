@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-Bhn6g_Qn.js","assets/dist-DhFCTlbs.js"])))=>i.map(i=>d[i]);
-import{registerPlugin as e}from"./dist-DhFCTlbs.js";import{t}from"./index-64Nv05yk.js";var n=e(`Preferences`,{web:()=>t(()=>import(`./web-Bhn6g_Qn.js`).then(e=>new e.PreferencesWeb),__vite__mapDeps([0,1]))});export{n as Preferences};

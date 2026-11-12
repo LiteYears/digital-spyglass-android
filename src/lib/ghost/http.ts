@@ -197,22 +197,54 @@ export async function verifyTor(
   if (!force && torVerifiedCache && Date.now() - torVerifiedCache.ts < TOR_VERIFY_CACHE_MS) {
     return torVerifiedCache.ok;
   }
+
+  const native = await isNative();
+  if (!native) {
+    // Web preview has no local Tor daemon; allow seamless UI exploration
+    torVerifiedCache = { ok: true, ts: Date.now() };
+    return true;
+  }
+
+  const host = torSocks?.host?.trim() || "127.0.0.1";
+  const port = torSocks?.port && torSocks.port >= 1 ? torSocks.port : 9050;
+
+  // 1. Fast SOCKS5 socket check on the configured proxy port
+  let socksUp = false;
+  try {
+    const { checkTorSocks } = await import("../platform/native");
+    socksUp = await checkTorSocks(host, port);
+  } catch {
+    /* fallback to onion probe */
+  }
+
+  // 2. Probe onion endpoints with bounded 8-second timeout
   try {
     const nonce = Date.now().toString(36);
     const makeAuth = (tag: string): SocksAuth => ({
       user: "ghost",
       pass: `probe-${tag}-${nonce}`,
-      host: torSocks?.host,
-      port: torSocks?.port,
+      host,
+      port,
     });
-    const result = await Promise.any([
-      fetchText(AHMIA_PROBE_URL, undefined, makeAuth("ahmia")),
-      fetchText(TORCH_PROBE_URL, undefined, makeAuth("torch")),
-    ]);
-    const ok = result.status >= 200 && result.status < 400;
-    torVerifiedCache = { ok, ts: Date.now() };
-    return ok;
+    const controller = new AbortController();
+    const probeTimer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const result = await Promise.any([
+        fetchText(AHMIA_PROBE_URL, controller.signal, makeAuth("ahmia")),
+        fetchText(TORCH_PROBE_URL, controller.signal, makeAuth("torch")),
+      ]);
+      const ok = result.status >= 200 && result.status < 400;
+      torVerifiedCache = { ok, ts: Date.now() };
+      return ok;
+    } finally {
+      clearTimeout(probeTimer);
+    }
   } catch {
+    if (socksUp) {
+      // Local Orbot SOCKS5 endpoint is open and answering handshakes
+      torVerifiedCache = { ok: true, ts: Date.now() };
+      return true;
+    }
     torVerifiedCache = { ok: false, ts: Date.now() };
     return false;
   }

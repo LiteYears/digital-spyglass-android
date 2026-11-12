@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -87,6 +87,7 @@ function originOf(url: string): string {
 function EnginesScreen() {
   const { settings, updateSettings } = useGhost();
   const [tick, setTick] = useState(0);
+  const [filterQuery, setFilterQuery] = useState("");
 
   const fastSet = new Set(enginesForFastMode());
   const allOn = settings.engines.length === 0 && !settings.fastMode;
@@ -110,6 +111,32 @@ function EnginesScreen() {
     });
   };
 
+  const selectAll = () => {
+    void updateSettings({ engines: [], fastMode: false });
+    toast.success("Selected all 13 engines");
+  };
+
+  const selectFast5 = () => {
+    void updateSettings({ engines: [], fastMode: true });
+    toast.success("Selected Fast 5 core engines");
+  };
+
+  const selectHighTrust = () => {
+    const high = ENGINES.filter((e) => e.trust >= 2).map((e) => e.id);
+    void updateSettings({ engines: high, fastMode: false });
+    toast.success(`Selected ${high.length} high-trust engines (trust ≥ 2)`);
+  };
+
+  const displayedEngines = ENGINES.filter((engine) => {
+    if (!filterQuery.trim()) return true;
+    const q = filterQuery.toLowerCase().trim();
+    return (
+      engine.name.toLowerCase().includes(q) ||
+      engine.id.toLowerCase().includes(q) ||
+      engine.note.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <AppShell heading="Onion search engines and circuit state">
       <Panel
@@ -121,6 +148,7 @@ function EnginesScreen() {
             onClick={() => {
               resetBreaker();
               setTick((value) => value + 1);
+              toast.info("Circuit breakers reset");
             }}
             className="tap min-h-11 px-1 text-dim hover:text-amber"
           >
@@ -128,8 +156,56 @@ function EnginesScreen() {
           </button>
         }
       >
+        <div className="space-y-2 border-b border-border-subtle p-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={selectAll}
+              className={`tap rounded-md px-2.5 py-1 text-xs font-mono transition-colors ${
+                allOn ? "bg-amber/30 text-amber font-semibold" : "bg-panel text-dim hover:text-foreground"
+              }`}
+            >
+              all 13
+            </button>
+            <button
+              type="button"
+              onClick={selectFast5}
+              className={`tap rounded-md px-2.5 py-1 text-xs font-mono transition-colors ${
+                settings.fastMode ? "bg-amber/30 text-amber font-semibold" : "bg-panel text-dim hover:text-foreground"
+              }`}
+            >
+              fast 5 core
+            </button>
+            <button
+              type="button"
+              onClick={selectHighTrust}
+              className="tap rounded-md bg-panel px-2.5 py-1 text-xs font-mono text-dim transition-colors hover:text-foreground"
+            >
+              trust ≥ 2
+            </button>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-dim" />
+            <input
+              type="search"
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+              placeholder="filter engines by name or id…"
+              className="w-full rounded-md border border-border-subtle bg-elevated/70 py-1.5 pl-8 pr-8 font-mono text-xs text-foreground placeholder:text-dim focus:border-amber/60 focus:outline-none"
+            />
+            {filterQuery.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterQuery("")}
+                className="tap absolute right-2.5 top-1/2 -translate-y-1/2 text-dim hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
         <ul className="divide-y divide-border-subtle" key={tick}>
-          {ENGINES.map((engine) => {
+          {displayedEngines.map((engine) => {
             const open = isOpen(engine.id);
             const deprecated = isDeprecated(engine.id);
             const tier = engineTier(engine.id);
@@ -202,6 +278,18 @@ function EnginesScreen() {
               </li>
             );
           })}
+          {displayedEngines.length === 0 && (
+            <li className="px-3 py-6 text-center">
+              <p className="font-mono text-xs text-dim">No engines match "{filterQuery}"</p>
+              <button
+                type="button"
+                onClick={() => setFilterQuery("")}
+                className="tap mt-2 rounded bg-panel px-2.5 py-1 font-mono text-xs text-amber"
+              >
+                clear filter
+              </button>
+            </li>
+          )}
         </ul>
       </Panel>
 
