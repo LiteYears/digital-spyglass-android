@@ -77,6 +77,22 @@ public class PianoTorHttpPlugin extends Plugin {
     // Per-host cookie jar: host -> (cookieName -> cookieValue)
     private static final Map<String, Map<String, String>> cookieJar = new ConcurrentHashMap<>();
 
+    // Bounded concurrent I/O dispatcher for parallel multi-engine Tor SOCKS5 queries
+    private static final java.util.concurrent.ExecutorService TOR_EXECUTOR =
+            new java.util.concurrent.ThreadPoolExecutor(
+                    4,
+                    16,
+                    30L,
+                    java.util.concurrent.TimeUnit.SECONDS,
+                    new java.util.concurrent.LinkedBlockingQueue<>(128),
+                    r -> {
+                        Thread t = new Thread(r, "PianoTorHttp-worker");
+                        t.setDaemon(true);
+                        return t;
+                    },
+                    new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy()
+            );
+
     public static void clearCookieJarStatic() {
         for (Map<String, String> hostCookies : cookieJar.values()) {
             hostCookies.clear();
@@ -92,6 +108,22 @@ public class PianoTorHttpPlugin extends Plugin {
         if (host == null) return false;
         String lower = host.toLowerCase(Locale.ROOT);
         return V3_ONION_HOST.matcher(lower).matches();
+    }
+
+    public static boolean isValidHttpUrl(URL url) {
+        if (url == null) return false;
+        String proto = url.getProtocol();
+        if (!"http".equalsIgnoreCase(proto) && !"https".equalsIgnoreCase(proto)) return false;
+        String host = url.getHost();
+        return host != null && !host.isEmpty();
+    }
+
+    private static String toBase64(byte[] bytes) {
+        try {
+            return java.util.Base64.getEncoder().encodeToString(bytes);
+        } catch (Throwable t) {
+            return android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
+        }
     }
 
     /**
@@ -129,8 +161,8 @@ public class PianoTorHttpPlugin extends Plugin {
 
     @PluginMethod
     public void fetch(final PluginCall call) {
-        // MUST run on background thread — Socket operations block the UI thread.
-        new Thread(() -> doFetch(call), "PianoTorHttp-fetch").start();
+        // Dispatch to bounded worker pool — avoids thread-creation overhead across 13 parallel engines.
+        TOR_EXECUTOR.execute(() -> doFetch(call));
     }
 
     /**
@@ -164,12 +196,18 @@ public class PianoTorHttpPlugin extends Plugin {
         int socksPort = (socksPortObj != null && socksPortObj >= 1 && socksPortObj <= 65535)
                 ? socksPortObj : SOCKS_PORT;
 
+        boolean allowAnyHttp = Boolean.TRUE.equals(call.getBoolean("allowAnyHttp", false))
+                || Boolean.TRUE.equals(call.getBoolean("browserMode", false));
+
         try {
             HttpResult result = executeFetchWithRedirects(
-                    urlStr, ua, method, postBody, socksUser, socksPass, socksHost, socksPort);
+                    urlStr, ua, method, postBody, socksUser, socksPass, socksHost, socksPort, allowAnyHttp);
             JSObject jsResult = new JSObject();
             jsResult.put("status", result.status);
             jsResult.put("body", result.body);
+            if (result.base64 != null) jsResult.put("base64", result.base64);
+            if (result.contentType != null) jsResult.put("contentType", result.contentType);
+            if (result.location != null) jsResult.put("location", result.location);
             call.resolve(jsResult);
         } catch (IOException e) {
             call.reject("Tor fetch failed: " + e.getMessage());
@@ -181,38 +219,49 @@ public class PianoTorHttpPlugin extends Plugin {
     static class HttpResult {
         int status;
         String body;
+        String base64;
         String location;
+        String contentType;
     }
 
     static HttpResult executeFetchWithRedirects(
             String urlStr, String ua, String method, String postBody,
             String socksUser, String socksPass,
             String socksHost, int socksPort) throws IOException {
+        return executeFetchWithRedirects(urlStr, ua, method, postBody, socksUser, socksPass, socksHost, socksPort, false);
+    }
+
+    static HttpResult executeFetchWithRedirects(
+            String urlStr, String ua, String method, String postBody,
+            String socksUser, String socksPass,
+            String socksHost, int socksPort, boolean allowAnyHttp) throws IOException {
         String currentUrl = urlStr;
         String curMethod = method;
         String curBody = postBody;
         String secFetchSite = "none";
         for (int hop = 0; hop < 5; hop++) {
             URL validated = new URL(currentUrl);
-            if (!isValidOnionUrl(validated)) {
+            if (!allowAnyHttp && !isValidOnionUrl(validated)) {
                 throw new IOException("Blocked non-v3-.onion or non-HTTP target on hop " + hop);
+            } else if (allowAnyHttp && !isValidHttpUrl(validated)) {
+                throw new IOException("Blocked invalid target on hop " + hop);
             }
             HttpResult result = fetchOnce(
                     currentUrl, ua, curMethod, curBody,
-                    socksUser, socksPass, socksHost, socksPort, secFetchSite);
+                    socksUser, socksPass, socksHost, socksPort, secFetchSite, allowAnyHttp);
 
             if (result.status >= 300 && result.status < 400 && result.location != null) {
                 URL next = new URL(validated, result.location);
-                if (!isValidOnionUrl(next)) {
+                if (!allowAnyHttp && !isValidOnionUrl(next)) {
                     throw new IOException("Blocked redirect outside v3 .onion domain");
+                } else if (allowAnyHttp && !isValidHttpUrl(next)) {
+                    throw new IOException("Blocked redirect to invalid URL");
                 }
                 boolean sameOrigin = validated.getHost().equalsIgnoreCase(next.getHost())
                         && validated.getPort() == next.getPort();
                 secFetchSite = sameOrigin ? "same-origin" : "cross-site";
                 currentUrl = next.toString();
                 if (result.status == 307 || result.status == 308) {
-                    // Method-preserving redirects: keep POST only same-origin;
-                    // never forward a request body to a different host.
                     if (!sameOrigin && curBody != null) {
                         throw new IOException("Blocked cross-host redirect carrying request body");
                     }
@@ -231,12 +280,22 @@ public class PianoTorHttpPlugin extends Plugin {
                                   String socksUser, String socksPass,
                                   String socksHost, int socksPort,
                                   String secFetchSite) throws IOException {
+        return fetchOnce(urlStr, ua, method, postBody, socksUser, socksPass, socksHost, socksPort, secFetchSite, false);
+    }
+
+    static HttpResult fetchOnce(String urlStr, String ua, String method, String postBody,
+                                  String socksUser, String socksPass,
+                                  String socksHost, int socksPort,
+                                  String secFetchSite, boolean allowAnyHttp) throws IOException {
         URL url = new URL(urlStr);
-        if (!isValidOnionUrl(url)) {
+        if (!allowAnyHttp && !isValidOnionUrl(url)) {
             throw new IOException("Refusing non-v3-.onion target");
+        } else if (allowAnyHttp && !isValidHttpUrl(url)) {
+            throw new IOException("Refusing invalid HTTP target");
         }
+        boolean isHttps = "https".equalsIgnoreCase(url.getProtocol());
         String host = url.getHost().toLowerCase(Locale.ROOT);
-        int port = url.getPort() > 0 ? url.getPort() : url.getDefaultPort();
+        int port = url.getPort() > 0 ? url.getPort() : (isHttps ? 443 : 80);
         String path = toAsciiRequestTarget(url);
 
         Socket socket = new Socket();
@@ -329,6 +388,16 @@ public class PianoTorHttpPlugin extends Plugin {
             }
             if (addrLen > 0) readN(in, addrLen);
             readN(in, 2);
+
+            if (isHttps) {
+                javax.net.ssl.SSLSocketFactory sslSocketFactory =
+                        (javax.net.ssl.SSLSocketFactory) javax.net.ssl.SSLSocketFactory.getDefault();
+                javax.net.ssl.SSLSocket sslSocket =
+                        (javax.net.ssl.SSLSocket) sslSocketFactory.createSocket(socket, host, port, true);
+                sslSocket.startHandshake();
+                out = sslSocket.getOutputStream();
+                in = sslSocket.getInputStream();
+            }
 
             // Build cookie header from jar
             String cookieHeader = buildCookieHeader(host);
@@ -476,6 +545,8 @@ public class PianoTorHttpPlugin extends Plugin {
                     parseSetCookie(hVal, host);
                 } else if ("content-encoding".equals(hName)) {
                     contentEncoding = hVal.toLowerCase(Locale.ROOT);
+                } else if ("content-type".equals(hName)) {
+                    result.contentType = hVal;
                 }
             }
             // Content-Encoding is decoded after the header pass: gzip/deflate
@@ -485,6 +556,9 @@ public class PianoTorHttpPlugin extends Plugin {
                 bodyBytes = decodeContentEncoding(bodyBytes, contentEncoding);
             }
             result.body = new String(bodyBytes, StandardCharsets.UTF_8);
+            if (allowAnyHttp) {
+                result.base64 = toBase64(bodyBytes);
+            }
             return result;
         } finally {
             try { socket.close(); } catch (IOException ignored) {}

@@ -1,3 +1,0 @@
-v3.0.2
-
-• Remove unused biometric and secure-storage Capacitor plugins so USE_BIOMETRIC and USE_FINGERPRINT permissions are no longer requested in the merged manifest

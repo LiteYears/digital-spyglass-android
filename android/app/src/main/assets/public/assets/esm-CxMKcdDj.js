@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-DfBuNTdT.js","assets/dist-DhFCTlbs.js"])))=>i.map(i=>d[i]);
+import{registerPlugin as e}from"./dist-DhFCTlbs.js";import{t}from"./index-DkjWrhHD.js";var n=e(`AppLauncher`,{web:()=>t(()=>import(`./web-DfBuNTdT.js`).then(e=>new e.AppLauncherWeb),__vite__mapDeps([0,1]))});export{n as AppLauncher};

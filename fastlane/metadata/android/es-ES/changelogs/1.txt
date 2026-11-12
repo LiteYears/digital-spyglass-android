@@ -1,7 +1,0 @@
-Versión inicial v1.0.0
-
-• 13 motores de búsqueda onion consultados en paralelo vía Tor
-• Sesión solo en RAM — ningún dato escrito en disco
-• Disparadores de purga: borrado de pánico, bloqueo de pantalla y salida de la app
-• Filtro VPN — bloquea las búsquedas si el VPN de Orbot no está activo
-• Sin backend, sin telemetría, sin cuentas, sin anuncios

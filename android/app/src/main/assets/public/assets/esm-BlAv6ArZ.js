@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-D-fAB867.js","assets/dist-DhFCTlbs.js"])))=>i.map(i=>d[i]);
+import{registerPlugin as e}from"./dist-DhFCTlbs.js";import{t}from"./index-DkjWrhHD.js";var n;(function(e){e.Heavy=`HEAVY`,e.Medium=`MEDIUM`,e.Light=`LIGHT`})(n||={});var r;(function(e){e.Success=`SUCCESS`,e.Warning=`WARNING`,e.Error=`ERROR`})(r||={});var i=e(`Haptics`,{web:()=>t(()=>import(`./web-D-fAB867.js`).then(e=>new e.HapticsWeb),__vite__mapDeps([0,1]))});export{i as Haptics,n as ImpactStyle,r as NotificationType};

@@ -1,8 +1,0 @@
-v2.0.0
-
-• Classement Okapi BM25 avec bonus d'accord multi-moteurs
-• Isolation des flux Tor SOCKS5 par moteur pour éviter la congestion des circuits par les moteurs lents
-• Hôte et port Tor SOCKS5 configurables dans les réglages Sécurité
-• Gigue optionnelle de la temporisation du trafic et mode surge shaping
-• Filtrage des URL indésirables et extraction d'entités CVE/IPv4 dans les résultats
-• Écrans de contrôle défilants avec safe-area insets pour les écrans compacts

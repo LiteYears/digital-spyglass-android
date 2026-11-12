@@ -72,9 +72,14 @@ public class MainActivity extends BridgeActivity {
             WebView wv = getBridge() != null ? getBridge().getWebView() : null;
             activeWebView = wv;
             if (wv != null) {
+                wv.setLayerType(View.LAYER_TYPE_HARDWARE, null);
                 WebSettings ws = wv.getSettings();
                 ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
                 ws.setSaveFormData(false);
+                ws.setGeolocationEnabled(false);
+                ws.setAllowFileAccess(false);
+                ws.setAllowContentAccess(false);
+                ws.setMediaPlaybackRequiresUserGesture(true);
                 // Opt the WebView out of the platform autofill framework so the
                 // OS has no reason to fetch form-detection models from Google.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

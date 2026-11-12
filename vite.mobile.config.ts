@@ -25,6 +25,7 @@ export default defineConfig({
     emptyOutDir: true,
     target: "es2022",
     sourcemap: false,
+    chunkSizeWarningLimit: 3200,
     rolldownOptions: {
       external: ["linkedom"],
     },

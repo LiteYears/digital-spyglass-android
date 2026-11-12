@@ -1,6 +1,0 @@
-v4.0.0
-
-• Strikte Tor-v3-.onion-Erzwingung auf jedem Redirect-Hop & RFC-3986-ASCII-URI-Encoding
-• Natives Anti-Forensik-Panic-Wipe (WebView-/Cache-Shred, finishAndRemoveTask, harter Prozess-Kill) + Guardian-Project-PanicKit-Responder
-• Kryptografische Tor-v3-SHA3-256-Adress- und Vanity-Klon-Verifikation + SimHash-Mirror-Clustering
-• Passphrasen-authentifizierter AES-256-GCM-RAM-Export (PBKDF2 210k + AAD) & begrenzte FileProvider-Pfade

@@ -1,8 +1,0 @@
-v4.2.0 - Result link actions
-
-- Each result row now has Copy and Share buttons next to Bookmark and
-  Open: copy writes the link to the clipboard, share opens the Android
-  share sheet with title + URL.
-- Links copied or shared this way have tracking parameters stripped,
-  same as links opened in Tor Browser.
-- The URL line carries the full address as its title attribute.

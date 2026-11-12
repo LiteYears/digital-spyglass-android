@@ -1,7 +1,0 @@
-Initial release v1.0.0
-
-• 13 onion search engines queried in parallel via Tor
-• RAM-only session — no data written to disk
-• Panic wipe, screen lock, and app exit purge triggers
-• VPN gate — blocks queries unless Orbot VPN is active
-• No backend, no telemetry, no accounts, no ads

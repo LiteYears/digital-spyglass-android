@@ -1,8 +1,0 @@
-v3.0.0
-
-• Trust-weighted Reciprocal Rank Fusion (RRF k=10) + quality filter modifier
-• Per-engine query contracts (length, term count, boolean/quote normalization)
-• Fast 5 mode (5 Core + Reinforcement engines, ~60% lower search latency)
-• RAM-only cross-domain entity correlation and CSV/STIX 2.1 export
-• Fix chunked keep-alive socket reads (TorDex) and UTF-8 response decoding
-• Ahmia MD5 hash blacklist support and updated Torch endpoint

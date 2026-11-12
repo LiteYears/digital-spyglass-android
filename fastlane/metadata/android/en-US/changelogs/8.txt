@@ -1,4 +1,0 @@
-v3.0.1
-
-• Custom Ghost project launcher icon (adaptive foreground/background + monochrome layer) across all mipmap densities
-• Matching dark splash screens (#0B0E14) across all 11 portrait/landscape densities, replacing default framework artwork

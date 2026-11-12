@@ -1,8 +1,0 @@
-v2.0.0
-
-• Okapi BM25 ranking with multi-engine agreement boost
-• Per-engine Tor SOCKS5 stream isolation to prevent slow-engine circuit congestion
-• Configurable Tor SOCKS5 host and port in Security settings
-• Optional traffic-timing jitter and surge shaping mode
-• Junk-URL filtering and CVE/IPv4 entity extraction in results
-• Scrollable gate screens with safe-area insets for compact displays

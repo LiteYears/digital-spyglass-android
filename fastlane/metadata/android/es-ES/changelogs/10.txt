@@ -1,6 +1,0 @@
-v4.0.0
-
-• Aplicación estricta de .onion Tor v3 en cada salto de redirección y codificación de URI ASCII RFC 3986
-• Borrado de pánico antiforense nativo (destrucción de WebView/caché, finishAndRemoveTask, kill duro del proceso) + respondedor Guardian Project PanicKit
-• Verificación criptográfica SHA3-256 de direcciones Tor v3 y clones vanity + agrupación de espejos SimHash
-• Exportación en RAM AES-256-GCM autenticada por frase de contraseña (PBKDF2 210k + AAD) y rutas FileProvider restringidas

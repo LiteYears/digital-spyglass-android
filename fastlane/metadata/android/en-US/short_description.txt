@@ -1,1 +1,0 @@
-Tor onion search aggregator. Privacy-first, RAM-only, no tracking.

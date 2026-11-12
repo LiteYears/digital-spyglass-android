@@ -1,4 +1,0 @@
-v3.0.1
-
-• Icono de launcher personalizado del proyecto Ghost (primer plano/fondo adaptable + capa monocroma) en todas las densidades mipmap
-• Pantallas de arranque oscuras a juego (#0B0E14) en las 11 densidades vertical/horizontal, sustituyendo los gráficos por defecto del framework

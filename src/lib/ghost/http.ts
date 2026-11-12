@@ -9,6 +9,7 @@
  * No response body is ever stored. The string is parsed and dropped.
  */
 import { isNative, torFetch } from "../platform/bridge";
+import { checkTorSocks } from "../platform/native";
 
 /**
  * Single fixed User-Agent matching Tor Browser on Android (Firefox ESR 140).
@@ -211,7 +212,6 @@ export async function verifyTor(
   // 1. Fast SOCKS5 socket check on the configured proxy port
   let socksUp = false;
   try {
-    const { checkTorSocks } = await import("../platform/native");
     socksUp = await checkTorSocks(host, port);
   } catch {
     /* fallback to onion probe */
