@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Network, Radio, Search, ShieldCheck, type LucideIcon } from "lucide-react";
+import { Globe, Network, Radio, Search, ShieldCheck, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { PersonaGate } from "./persona-gate";
 
 const TABS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Search", icon: Search },
+  { to: "/browser", label: "Browser", icon: Globe },
   { to: "/graph", label: "Graph", icon: Network },
   { to: "/engines", label: "Engines", icon: Radio },
   { to: "/security", label: "Security", icon: ShieldCheck },
@@ -30,7 +31,7 @@ function BottomNav() {
         className="absolute top-0 h-px bg-amber transition-[left] duration-300 ease-out"
         style={{ width: `${100 / TABS.length}%`, left: `${(100 / TABS.length) * activeIndex}%` }}
       />
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {TABS.map((tab, index) => {
           const active = index === activeIndex;
           const Icon = tab.icon;

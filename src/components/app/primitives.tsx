@@ -30,14 +30,14 @@ export function Panel({
       {(title || action) && (
         <header
           className={cn(
-            "flex items-center justify-between gap-2 border-b border-border-subtle px-3 py-2",
+            "flex items-center justify-between gap-2 border-b border-border-subtle px-3.5 py-2.5",
             pending && "sweep",
           )}
         >
-          <span className="label-micro flex items-center gap-2">
+          <span className="label-micro flex items-center gap-2 font-medium">
             <span
               aria-hidden
-              className={cn("h-3 w-px bg-amber", pending ? "animate-breathe" : "opacity-60")}
+              className={cn("h-3.5 w-0.5 bg-amber rounded-full", pending ? "animate-breathe" : "opacity-80")}
             />
             {title}
           </span>
@@ -50,7 +50,7 @@ export function Panel({
 }
 
 export function MicroLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn("label-micro", className)}>{children}</span>;
+  return <span className={cn("label-micro leading-relaxed tracking-wider", className)}>{children}</span>;
 }
 
 export type Signal = "green" | "amber" | "red" | "dim";
@@ -81,7 +81,7 @@ export function Dot({
   return (
     <span
       aria-hidden
-      className={cn("relative inline-flex size-2 items-center justify-center", className)}
+      className={cn("relative inline-flex size-2 items-center justify-center shrink-0", className)}
     >
       {pulse && signal !== "dim" && (
         <span className={cn("absolute inset-0 rounded-full animate-ping-slow", signalBg[signal])} />
@@ -109,10 +109,10 @@ export function Chip({
     <Component
       {...(onClick ? { type: "button" as const, onClick } : {})}
       className={cn(
-        "tap inline-flex min-h-8 items-center gap-1.5 border px-2 font-mono text-[11px] uppercase tracking-wider",
+        "tap inline-flex min-h-9 items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider leading-none",
         active
-          ? "glow-ring border-amber/60 bg-amber/10 text-amber"
-          : "border-border-subtle text-muted-foreground hover:border-border-active hover:text-foreground",
+          ? "glow-ring border-amber/60 bg-amber/10 text-amber shadow-sm"
+          : "border-border-subtle bg-elevated/40 text-muted-foreground hover:border-border-active hover:text-foreground",
         !active && signal !== "dim" && signalText[signal],
         className,
       )}
@@ -135,9 +135,9 @@ export const ConsoleInput = forwardRef<
       autoCorrect="off"
       spellCheck={false}
       className={cn(
-        "min-h-11 w-full border border-border-subtle bg-elevated/70 px-3 font-mono text-sm text-foreground",
+        "min-h-12 w-full border border-border-subtle bg-elevated/70 px-3.5 py-2.5 font-mono text-sm text-foreground",
         "transition-[box-shadow,border-color] duration-200",
-        "placeholder:text-dim focus:border-amber/60 focus:outline-none focus:glow-ring",
+        "placeholder:text-dim/80 focus:border-amber/70 focus:outline-none focus:glow-ring",
         className,
       )}
       style={{ borderRadius: "var(--radius)" }}
@@ -166,7 +166,7 @@ export function ActionButton({
   "aria-label"?: string;
 }) {
   const variants = {
-    default: "border-border-subtle bg-elevated/70 text-foreground hover:border-border-active",
+    default: "border-border-subtle bg-elevated/70 text-foreground hover:border-border-active hover:bg-elevated",
     primary: "border-transparent text-primary-foreground glow-ring",
     danger: "border-signal-red/60 text-signal-red hover:bg-signal-red/10",
   } as const;
@@ -178,8 +178,8 @@ export function ActionButton({
       disabled={disabled}
       aria-label={ariaLabel}
       className={cn(
-        "tap inline-flex min-h-11 items-center justify-center gap-2 border px-3 font-mono text-xs uppercase tracking-wider",
-        "disabled:opacity-40",
+        "tap inline-flex min-h-12 items-center justify-center gap-2 border px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium select-none",
+        "disabled:opacity-40 transition-all duration-150 active:scale-[0.98]",
         variants[variant],
         pending && "sweep",
         className,

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -6,6 +6,7 @@ import {
   Bookmark,
   Copy,
   ExternalLink,
+  Globe,
   Search as SearchIcon,
   Share2,
   Square,
@@ -91,6 +92,7 @@ function SearchScreen() {
     setFilter,
     logQuery,
   } = useGhost();
+  const navigate = useNavigate();
   const query = searchQuery;
   const outcome = searchOutcome;
   const [progress, setProgress] = useState<SearchProgress | null>(null);
@@ -207,7 +209,7 @@ function SearchScreen() {
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 108,
+    estimateSize: () => 124,
     overscan: 6,
   });
 
@@ -250,7 +252,17 @@ function SearchScreen() {
     toast.success(`Exported ${rowsToExport.length} results`);
   };
 
-  const open = async (rawUrl: string) => {
+  const openInBuiltinBrowser = (rawUrl: string) => {
+    const { url, stripped } = stripTrackingParams(rawUrl);
+    if (stripped.length > 0) {
+      toast.info(
+        `Stripped ${stripped.length} tracking parameter${stripped.length > 1 ? "s" : ""} before opening`,
+      );
+    }
+    navigate({ to: "/browser", search: { url } });
+  };
+
+  const openExternalHandler = async (rawUrl: string) => {
     const { url, stripped } = stripTrackingParams(rawUrl);
     if (stripped.length > 0) {
       toast.info(
@@ -264,8 +276,13 @@ function SearchScreen() {
       if (!proceed) return;
     }
     const ok = await openExternal(url);
-    if (!ok) toast.error("No external handler. Install Tor Browser.");
+    if (!ok) {
+      toast.info("No external Tor Browser found — opening in built-in browser");
+      navigate({ to: "/browser", search: { url } });
+    }
   };
+
+  const open = openInBuiltinBrowser;
 
   const copyUrl = async (url: string) => {
     const { url: clean, stripped } = stripTrackingParams(url);
@@ -576,54 +593,70 @@ function SearchScreen() {
                         key={row.key}
                         ref={virtualizer.measureElement}
                         data-index={item.index}
-                        className="absolute inset-x-0 border-b border-border-subtle px-3 py-2 transition-colors hover:bg-amber/5"
+                        className="absolute inset-x-0 border-b border-border-subtle px-3.5 py-3 transition-colors hover:bg-amber/5"
                         style={{ transform: `translateY(${item.start}px)` }}
                       >
-                        <div className="flex items-center gap-1.5">
-                          {row.onion && <Chip signal="amber">onion</Chip>}
+                        <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                          {row.onion && <Chip signal="amber">.onion</Chip>}
                           {row.engines.map((id) => (
                             <MicroLabel key={id}>{id}</MicroLabel>
                           ))}
                           {row.correlatedCount && row.correlatedCount > 0 && (
-                            <span className="rounded bg-amber/15 px-1 py-0.5 font-mono text-[9px] text-amber">
+                            <span className="rounded bg-amber/15 px-1.5 py-0.5 font-mono text-[9px] text-amber">
                               linked ({row.correlatedCount})
                             </span>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => toggleBookmark(row)}
-                            aria-label={bookmarked ? "Remove bookmark" : "Bookmark result"}
-                            className={`tap ml-auto size-5 shrink-0 ${bookmarked ? "text-amber" : "text-dim hover:text-foreground"}`}
-                          >
-                            <Bookmark
-                              className="size-3.5"
-                              fill={bookmarked ? "currentColor" : "none"}
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void copyUrl(row.url)}
-                            aria-label="Copy link"
-                            className="tap size-5 shrink-0 text-dim hover:text-foreground"
-                          >
-                            <Copy className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => shareLink(row.title, row.url)}
-                            aria-label="Share link"
-                            className="tap size-5 shrink-0 text-dim hover:text-foreground"
-                          >
-                            <Share2 className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void open(row.url)}
-                            aria-label="Open in Tor Browser"
-                            className="tap size-5 shrink-0 text-dim hover:text-foreground"
-                          >
-                            <ExternalLink className="size-3.5" />
-                          </button>
+                          <div className="ml-auto flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openInBuiltinBrowser(row.url)}
+                              aria-label="Browse in built-in browser"
+                              className="tap flex items-center gap-1 rounded bg-amber/20 px-2 py-1 font-mono text-[11px] font-medium text-amber transition-colors hover:bg-amber/30 active:scale-95"
+                            >
+                              <Globe className="size-3" />
+                              <span>Browse</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleBookmark(row)}
+                              aria-label={bookmarked ? "Remove bookmark" : "Bookmark result"}
+                              className={`tap flex size-7 items-center justify-center rounded transition-colors ${
+                                bookmarked
+                                  ? "text-amber hover:bg-amber/10"
+                                  : "text-dim hover:bg-foreground/10 hover:text-foreground"
+                              }`}
+                            >
+                              <Bookmark
+                                className="size-3.5"
+                                fill={bookmarked ? "currentColor" : "none"}
+                              />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void copyUrl(row.url)}
+                              aria-label="Copy link"
+                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
+                            >
+                              <Copy className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => shareLink(row.title, row.url)}
+                              aria-label="Share link"
+                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
+                            >
+                              <Share2 className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void openExternalHandler(row.url)}
+                              aria-label="Open in external Tor Browser"
+                              title="Open in external Tor Browser"
+                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
+                            >
+                              <ExternalLink className="size-3.5" />
+                            </button>
+                          </div>
                         </div>
                         <button
                           type="button"

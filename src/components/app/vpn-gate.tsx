@@ -8,6 +8,7 @@
 import { ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
+import { launchOrbot } from "@/lib/platform/native";
 import { useGhost } from "@/lib/store/ghost-context";
 import { ActionButton, MicroLabel } from "./primitives";
 
@@ -72,6 +73,12 @@ export function VpnGate() {
           </details>
         </div>
         <div className="w-full space-y-2">
+          <ActionButton
+            variant="default"
+            onClick={() => void launchOrbot()}
+          >
+            Launch / Install Orbot (Tor VPN)
+          </ActionButton>
           {transport.connectionType === "web" ? (
             <ActionButton
               variant="primary"

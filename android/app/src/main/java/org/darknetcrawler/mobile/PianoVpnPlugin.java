@@ -1,9 +1,11 @@
 package org.darknetcrawler.mobile;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
 import android.os.Build;
 
 import com.getcapacitor.JSObject;
@@ -25,6 +27,37 @@ import java.util.Locale;
 
 @CapacitorPlugin(name = "PianoVpn")
 public class PianoVpnPlugin extends Plugin {
+
+    @PluginMethod
+    public void openOrbot(PluginCall call) {
+        try {
+            Context ctx = getContext();
+            Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage("org.torproject.android");
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(launchIntent);
+                JSObject ret = new JSObject();
+                ret.put("opened", true);
+                call.resolve(ret);
+                return;
+            }
+            // If Orbot is not installed, open the Play Store listing or website
+            Intent storeIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=org.torproject.android"));
+            storeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(storeIntent);
+            JSObject ret = new JSObject();
+            ret.put("opened", false);
+            call.resolve(ret);
+        } catch (Exception e) {
+            try {
+                Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://orbot.app/"));
+                webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(webIntent);
+            } catch (Exception ignored) {
+            }
+            call.resolve();
+        }
+    }
 
     @PluginMethod
     public void isVpnActive(PluginCall call) {

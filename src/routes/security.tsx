@@ -36,7 +36,7 @@ import { assertRegistryIntact } from "@/lib/ghost/search";
 import type { RegistryIntegrity } from "@/lib/ghost/engines";
 import { fetchBodyOnly, invalidateTorVerification, verifyTor } from "@/lib/ghost/http";
 import { getHealth } from "@/lib/ghost/breaker";
-import { haptic, looksVirtualDevice } from "@/lib/platform/native";
+import { haptic, launchOrbot, looksVirtualDevice } from "@/lib/platform/native";
 import { useGhost } from "@/lib/store/ghost-context";
 
 export const Route = createFileRoute("/security")({
@@ -376,6 +376,18 @@ function SecurityScreen() {
                 test
               </button>
             </span>
+          </li>
+          <li className="flex items-center justify-between px-3 py-2.5">
+            <span className="text-sm text-foreground">Orbot Tor service</span>
+            <button
+              type="button"
+              onClick={() => {
+                void launchOrbot();
+              }}
+              className="tap rounded-md border border-amber/40 bg-amber/15 px-2.5 py-1 font-mono text-xs text-amber transition-colors hover:bg-amber/25 active:scale-95"
+            >
+              Open / Install Orbot
+            </button>
           </li>
         </ul>
         <div className="border-t border-border-subtle px-3 py-2.5">

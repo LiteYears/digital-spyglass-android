@@ -59,17 +59,29 @@ export async function platformName(): Promise<"android" | "ios" | "web"> {
   }
 }
 
-type TorFetchOptions = {
+export type TorFetchOptions = {
   url: string;
   userAgent?: string;
   method?: "GET" | "POST";
   body?: string;
   socksUser?: string;
   socksPass?: string;
+  socksHost?: string;
+  socksPort?: number;
+  browserMode?: boolean;
+  allowAnyHttp?: boolean;
+};
+
+export type TorFetchResult = {
+  status: number;
+  body: string;
+  base64?: string;
+  contentType?: string;
+  location?: string;
 };
 
 type TorHttpPlugin = {
-  fetch: (opts: TorFetchOptions) => Promise<{ status: number; body: string }>;
+  fetch: (opts: TorFetchOptions) => Promise<TorFetchResult>;
   purgeCookies: () => Promise<void>;
 };
 
@@ -87,11 +99,13 @@ export async function torFetch(
   options?: {
     method?: "GET" | "POST";
     body?: string;
+    browserMode?: boolean;
+    allowAnyHttp?: boolean;
     socksAuth?:
       | { user: string; pass: string; host?: string | undefined; port?: number | undefined }
       | undefined;
   },
-): Promise<{ status: number; body: string }> {
+): Promise<TorFetchResult> {
   if (!torHttpPlugin) {
     const { registerPlugin } = await core();
     torHttpPlugin = registerPlugin<TorHttpPlugin>("PianoTorHttp");

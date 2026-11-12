@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BrowserRouteImport } from './routes/browser'
 import { Route as EnginesRouteImport } from './routes/engines'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -17,6 +18,11 @@ import { Route as SecurityRouteImport } from './routes/security'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowserRoute = BrowserRouteImport.update({
+  id: '/browser',
+  path: '/browser',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnginesRoute = EnginesRouteImport.update({
@@ -37,12 +43,14 @@ const SecurityRoute = SecurityRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/browser': typeof BrowserRoute
   '/engines': typeof EnginesRoute
   '/graph': typeof GraphRoute
   '/security': typeof SecurityRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/browser': typeof BrowserRoute
   '/engines': typeof EnginesRoute
   '/graph': typeof GraphRoute
   '/security': typeof SecurityRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/browser': typeof BrowserRoute
   '/engines': typeof EnginesRoute
   '/graph': typeof GraphRoute
   '/security': typeof SecurityRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/engines' | '/graph' | '/security'
+  fullPaths: '/' | '/browser' | '/engines' | '/graph' | '/security'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/engines' | '/graph' | '/security'
-  id: '__root__' | '/' | '/engines' | '/graph' | '/security'
+  to: '/' | '/browser' | '/engines' | '/graph' | '/security'
+  id: '__root__' | '/' | '/browser' | '/engines' | '/graph' | '/security'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrowserRoute: typeof BrowserRoute
   EnginesRoute: typeof EnginesRoute
   GraphRoute: typeof GraphRoute
   SecurityRoute: typeof SecurityRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browser': {
+      id: '/browser'
+      path: '/browser'
+      fullPath: '/browser'
+      preLoaderRoute: typeof BrowserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/engines': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrowserRoute: BrowserRoute,
   EnginesRoute: EnginesRoute,
   GraphRoute: GraphRoute,
   SecurityRoute: SecurityRoute,

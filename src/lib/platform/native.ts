@@ -54,9 +54,34 @@ type VpnPlugin = {
   isVpnActive: () => Promise<{ active: boolean }>;
   isTorSocksReachable?: (opts?: { host?: string; port?: number }) => Promise<{ reachable: boolean }>;
   isVirtualDevice: () => Promise<{ isVirtual: boolean }>;
+  openOrbot?: () => Promise<{ opened?: boolean }>;
 };
 
 let vpnPlugin: VpnPlugin | null = null;
+
+export async function launchOrbot(): Promise<boolean> {
+  if (!(await isNative())) {
+    if (typeof window !== "undefined") {
+      window.open("https://orbot.app/", "_blank", "noopener,noreferrer");
+    }
+    return true;
+  }
+  try {
+    if (!vpnPlugin) {
+      const { registerPlugin } = await import("@capacitor/core");
+      vpnPlugin = registerPlugin<VpnPlugin>("PianoVpn");
+    }
+    if (vpnPlugin.openOrbot) {
+      const res = await vpnPlugin.openOrbot();
+      return !!res?.opened;
+    }
+  } catch {
+    if (typeof window !== "undefined") {
+      window.open("https://orbot.app/", "_blank", "noopener,noreferrer");
+    }
+  }
+  return false;
+}
 
 export async function checkTorSocks(host = "127.0.0.1", port = 9050): Promise<boolean> {
   if (!(await isNative())) return true;

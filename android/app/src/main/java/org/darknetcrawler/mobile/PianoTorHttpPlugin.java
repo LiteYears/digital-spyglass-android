@@ -70,6 +70,7 @@ public class PianoTorHttpPlugin extends Plugin {
     private static final int CONNECT_TIMEOUT_MS = 20000;
     private static final int READ_TIMEOUT_MS = 40000;
     private static final int MAX_BODY = 2_000_000;
+    private static final int MAX_BROWSER_BODY = 25_000_000;
     private static final Pattern V3_ONION_HOST =
             Pattern.compile("^(?:[a-z0-9-]{1,63}\\.)?[a-z2-7]{56}\\.onion$");
 
@@ -257,12 +258,10 @@ public class PianoTorHttpPlugin extends Plugin {
             OutputStream out = socket.getOutputStream();
             InputStream in = socket.getInputStream();
 
-            // SOCKS5 greeting — when socksUser/socksPass are provided, advertise both
-            // NO-AUTH (0x00) and USERNAME/PASSWORD (0x02) so Tor can choose 0x02 for
-            // IsolateSOCKSAuth circuit isolation, but doesn't hard-fail if the proxy chooses 0x00.
+            // SOCKS5 greeting
             boolean wantAuth = socksUser != null && socksPass != null;
             if (wantAuth) {
-                out.write(new byte[]{0x05, 0x02, 0x00, 0x02});
+                out.write(new byte[]{0x05, 0x01, 0x02});
             } else {
                 out.write(new byte[]{0x05, 0x01, 0x00});
             }
@@ -293,7 +292,11 @@ public class PianoTorHttpPlugin extends Plugin {
                 if (authResp[1] != 0x00) {
                     throw new IOException("SOCKS5 username/password auth rejected");
                 }
-            } else if (selectedMethod != 0x00 && selectedMethod != 0x02) {
+            } else if (selectedMethod == 0x00 && !wantAuth) {
+                // No authentication requested or required
+            } else if (selectedMethod == 0x00 && wantAuth) {
+                throw new IOException("SOCKS5 proxy selected NO-AUTH when credentials were provided — circuit isolation unavailable");
+            } else {
                 throw new IOException("SOCKS5 auth negotiation failed — unsupported method: 0x" +
                         Integer.toHexString(selectedMethod & 0xFF));
             }
@@ -372,14 +375,15 @@ public class PianoTorHttpPlugin extends Plugin {
             boolean isChunked = false;
             int contentLength = -1;
             String contentEncoding = null;
+            int effectiveCap = allowAnyHttp ? MAX_BROWSER_BODY : MAX_BODY;
             try {
                 int n;
                 while ((n = in.read(buf)) > 0) {
-                    int remainingCap = MAX_BODY - body.size();
+                    int remainingCap = effectiveCap - body.size();
                     if (remainingCap > 0) {
                         body.write(buf, 0, Math.min(n, remainingCap));
                     }
-                    if (body.size() >= MAX_BODY) break;
+                    if (body.size() >= effectiveCap) break;
 
                     byte[] cur = body.toByteArray();
                     if (headerEndByteIdx < 0) {
@@ -437,8 +441,8 @@ public class PianoTorHttpPlugin extends Plugin {
             if (isChunked && !hasChunkedTerminator(raw, bodyOffset)) {
                 throw new IOException("Incomplete chunked response: missing terminal chunk");
             }
-            if (contentLength < 0 && !isChunked && raw.length >= MAX_BODY) {
-                throw new IOException("Response exceeded " + MAX_BODY + "-byte cap before end of stream");
+            if (contentLength < 0 && !isChunked && raw.length >= effectiveCap) {
+                throw new IOException("Response exceeded " + effectiveCap + "-byte cap before end of stream");
             }
             int bodyLen = Math.max(0, raw.length - bodyOffset);
             byte[] bodyBytes = new byte[bodyLen];
