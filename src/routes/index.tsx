@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bookmark,
@@ -206,12 +205,6 @@ function SearchScreen() {
   );
   const liveReports = progress?.reports ?? outcome?.reports ?? [];
   const scrollRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 124,
-    overscan: 6,
-  });
 
   const toggleEngine = (id: string) => {
     const active =
@@ -583,20 +576,15 @@ function SearchScreen() {
               </div>
             )}
             {!resultsCollapsed && (
-              <div ref={scrollRef} className="max-h-[58vh] overflow-y-auto overscroll-contain">
-                <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
-                  {virtualizer.getVirtualItems().map((item) => {
-                    const row = rows[item.index]!;
-                    const bookmarked = isBookmarked(row.key);
-                    return (
-                      <div
-                        key={row.key}
-                        ref={virtualizer.measureElement}
-                        data-index={item.index}
-                        className="absolute inset-x-0 border-b border-border-subtle px-3.5 py-3 transition-colors hover:bg-amber/5"
-                        style={{ transform: `translateY(${item.start}px)` }}
-                      >
-                        <div className="flex flex-wrap items-center gap-1.5 pb-1">
+              <div ref={scrollRef} className="divide-y divide-border-subtle">
+                {rows.map((row) => {
+                  const bookmarked = isBookmarked(row.key);
+                  return (
+                    <div
+                      key={row.key}
+                      className="px-3.5 py-3 transition-colors hover:bg-amber/5"
+                    >
+                      <div className="flex flex-wrap items-center gap-1.5 pb-1">
                           {row.onion && <Chip signal="amber">.onion</Chip>}
                           {row.engines.map((id) => (
                             <MicroLabel key={id}>{id}</MicroLabel>
@@ -718,7 +706,6 @@ function SearchScreen() {
                       </div>
                     );
                   })}
-                </div>
               </div>
             )}
           </Panel>

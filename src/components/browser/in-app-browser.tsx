@@ -4,13 +4,17 @@ import {
   ArrowRight,
   Code,
   Copy,
+  Cpu,
   Download,
   ExternalLink,
   FileText,
   FolderDown,
   Globe,
   Lock,
+  MoreHorizontal,
   RefreshCw,
+  RotateCcw,
+  Search,
   Share2,
   ShieldAlert,
   ShieldCheck,
@@ -31,10 +35,12 @@ import {
 import {
   downloadFileSecurely,
   fetchBrowserUrl,
+  getBrowserEpoch,
   getSessionDownloads,
   normalizeBrowserUrl,
   prepareSandboxedHtml,
   purgeBrowserDownloads,
+  rotateBrowserIdentity,
   subscribeDownloads,
   triggerManualSave,
   type BrowserPageResponse,
@@ -44,7 +50,7 @@ import { ENGINES } from "@/lib/ghost/engines";
 import { openExternal } from "@/lib/ghost/external";
 import { isOnion } from "@/lib/ghost/parse";
 import { stripTrackingParams } from "@/lib/ghost/tracking";
-import { copyText, shareText } from "@/lib/platform/bridge";
+import { copyText, purgeTorCookies, shareText } from "@/lib/platform/bridge";
 import { useGhost } from "@/lib/store/ghost-context";
 
 type ViewMode = "web" | "reader" | "source";
@@ -68,8 +74,14 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("web");
   const [enableJs, setEnableJs] = useState(false);
+  const [blockWebgl, setBlockWebgl] = useState(true);
+  const [inlineAssets, setInlineAssets] = useState(true);
+  const [circuitEpoch, setCircuitEpoch] = useState<number>(() => getBrowserEpoch());
   const [downloading, setDownloading] = useState(false);
   const [showDownloads, setShowDownloads] = useState(false);
+  const [showBrowserMenu, setShowBrowserMenu] = useState(false);
+  const [showFindBar, setShowFindBar] = useState(false);
+  const [findTerm, setFindTerm] = useState("");
   const [downloads, setDownloads] = useState<DownloadedFileItem[]>(() =>
     getSessionDownloads(),
   );
@@ -89,7 +101,10 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
       setHistoryIndex(-1);
       setAddressInput("");
       setError(null);
+      setFindTerm("");
+      setShowFindBar(false);
       purgeBrowserDownloads();
+      setCircuitEpoch(getBrowserEpoch());
     });
   }, [registerPurge]);
 
@@ -102,7 +117,11 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
   }, [settings.torSocksHost, settings.torSocksPort]);
 
   const loadUrl = useCallback(
-    async (rawTarget: string, pushHistory = true) => {
+    async (
+      rawTarget: string,
+      pushHistory = true,
+      reqOptions?: { method?: "GET" | "POST"; body?: string },
+    ) => {
       const normalized = normalizeBrowserUrl(rawTarget);
       if (!normalized) return;
 
@@ -121,7 +140,11 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
       }
 
       try {
-        const res = await fetchBrowserUrl(normalized, socksConfig);
+        const res = await fetchBrowserUrl(normalized, socksConfig, {
+          method: reqOptions?.method ?? "GET",
+          body: reqOptions?.body,
+          inlineSubresources: inlineAssets,
+        });
         setPage(res);
         setAddressInput(res.finalUrl);
         if (res.isDownloadable) {
@@ -134,7 +157,7 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
         setLoading(false);
       }
     },
-    [historyIndex, socksConfig],
+    [historyIndex, socksConfig, inlineAssets],
   );
 
   useEffect(() => {
@@ -144,12 +167,20 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
     }
   }, [initialUrl, loadUrl]);
 
-  /* Listen for link clicks inside the sandboxed iframe */
+  /* Listen for link clicks and GET/POST form submissions inside the sandboxed iframe */
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      const data = event.data as { type?: string; url?: string } | null;
+      const data = event.data as {
+        type?: string;
+        url?: string;
+        method?: "GET" | "POST";
+        body?: string;
+      } | null;
       if (data && data.type === "ghost-browser-nav" && typeof data.url === "string") {
-        void loadUrl(data.url, true);
+        void loadUrl(data.url, true, {
+          method: data.method ?? "GET",
+          body: data.body,
+        });
       }
     };
     window.addEventListener("message", handler);
@@ -180,6 +211,17 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
   };
 
   const reloadCurrent = () => {
+    const current = page?.finalUrl || addressInput;
+    if (current) {
+      void loadUrl(current, false);
+    }
+  };
+
+  const handleNewTorIdentity = async () => {
+    await purgeTorCookies();
+    const nextEpoch = rotateBrowserIdentity();
+    setCircuitEpoch(nextEpoch);
+    toast.success(`New Tor Circuit Identity (#${nextEpoch}) & Cookie Jar Purged`);
     const current = page?.finalUrl || addressInput;
     if (current) {
       void loadUrl(current, false);
@@ -240,8 +282,21 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
 
   const sandboxedSrcDoc = useMemo(() => {
     if (!page || page.isDownloadable) return "";
-    return prepareSandboxedHtml(page.body, page.finalUrl, enableJs);
-  }, [page, enableJs]);
+    return prepareSandboxedHtml(page.body, page.finalUrl, enableJs, blockWebgl);
+  }, [page, enableJs, blockWebgl]);
+
+  const findMatchCount = useMemo(() => {
+    if (!findTerm.trim() || !page) return 0;
+    const haystack = (viewMode === "source" ? page.body : page.readerText || page.body).toLowerCase();
+    const needle = findTerm.trim().toLowerCase();
+    let count = 0;
+    let pos = 0;
+    while ((pos = haystack.indexOf(needle, pos)) !== -1) {
+      count += 1;
+      pos += needle.length;
+    }
+    return count;
+  }, [findTerm, page, viewMode]);
 
   const currentIsOnion = page ? page.isOnion : isOnion(addressInput);
 
@@ -249,9 +304,32 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
     <div className="space-y-3">
       {/* Top Address & Navigation Console */}
       <Panel
-        title="tor isolated browser · ram-only"
+        title={`tor browser · circuit #${circuitEpoch}`}
         action={
           <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => void handleNewTorIdentity()}
+              aria-label="Rotate Tor circuit identity and clear cookies"
+              title="New Tor Circuit Identity"
+              className="tap flex items-center gap-1 rounded border border-amber/40 bg-amber/15 px-2 py-0.5 font-mono text-[10px] text-amber hover:bg-amber/25"
+            >
+              <RotateCcw className="size-2.5" />
+              <span>New Circuit</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setBlockWebgl((v) => !v)}
+              aria-label="Toggle WebGL & Canvas anti-fingerprinting shield"
+              className={`tap flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[10px] transition-colors ${
+                blockWebgl
+                  ? "bg-signal-green/15 text-signal-green border border-signal-green/30"
+                  : "bg-amber/20 text-amber border border-amber/40"
+              }`}
+            >
+              <Cpu className="size-2.5" />
+              <span>{blockWebgl ? "WebGL Shield" : "WebGL On"}</span>
+            </button>
             <button
               type="button"
               onClick={() => setEnableJs((v) => !v)}
@@ -262,20 +340,7 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
                   : "bg-signal-green/15 text-signal-green border border-signal-green/30"
               }`}
             >
-              {enableJs ? "JS ON (unsafe)" : "JS OFF (safe)"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowDownloads((v) => !v)}
-              aria-label="Toggle session downloads drawer"
-              className={`tap flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[10px] transition-colors ${
-                showDownloads || downloads.length > 0
-                  ? "bg-amber/20 text-amber border border-amber/40"
-                  : "bg-foreground/10 text-dim hover:text-foreground"
-              }`}
-            >
-              <FolderDown className="size-3" />
-              <span>{downloads.length}</span>
+              {enableJs ? "JS ON" : "JS OFF"}
             </button>
           </div>
         }
@@ -343,48 +408,48 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
             </ActionButton>
           </form>
 
-          {/* Toolbar & Mode Switcher */}
+          {/* Organized Mode Switcher & Action Bar */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle pt-2">
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode("web")}
-                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
+                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1.5 font-mono text-xs transition-colors ${
                   viewMode === "web"
                     ? "bg-amber/25 text-amber font-medium"
                     : "bg-elevated text-dim hover:text-foreground"
                 }`}
               >
-                <Globe className="size-3" />
+                <Globe className="size-3.5" />
                 <span>Web</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("reader")}
-                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
+                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1.5 font-mono text-xs transition-colors ${
                   viewMode === "reader"
                     ? "bg-amber/25 text-amber font-medium"
                     : "bg-elevated text-dim hover:text-foreground"
                 }`}
               >
-                <FileText className="size-3" />
+                <FileText className="size-3.5" />
                 <span>Reader</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("source")}
-                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
+                className={`tap flex items-center gap-1 rounded-md px-2.5 py-1.5 font-mono text-xs transition-colors ${
                   viewMode === "source"
                     ? "bg-amber/25 text-amber font-medium"
                     : "bg-elevated text-dim hover:text-foreground"
                 }`}
               >
-                <Code className="size-3" />
+                <Code className="size-3.5" />
                 <span>Source</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={reloadCurrent}
@@ -396,44 +461,160 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
               </button>
               <button
                 type="button"
+                onClick={() => setShowFindBar((v) => !v)}
+                disabled={!page}
+                aria-label="Find in page"
+                className={`tap flex size-8 items-center justify-center rounded-md transition-colors disabled:opacity-40 ${
+                  showFindBar ? "bg-amber/25 text-amber" : "bg-elevated text-dim hover:text-foreground"
+                }`}
+              >
+                <Search className="size-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => void handleDownloadCurrent()}
                 disabled={downloading || (!page && !addressInput.trim())}
                 aria-label="Securely download current page or file"
-                className="tap flex items-center gap-1 rounded-md bg-amber/20 px-2.5 py-1 font-mono text-xs text-amber hover:bg-amber/30 disabled:opacity-40"
+                className="tap flex items-center gap-1 rounded-md bg-amber/20 px-2.5 py-1.5 font-mono text-xs text-amber hover:bg-amber/30 disabled:opacity-40"
               >
                 <Download className="size-3.5" />
                 <span>{downloading ? "Saving…" : "Download"}</span>
               </button>
               <button
                 type="button"
-                onClick={() => void handleCopyUrl()}
-                disabled={!page && !addressInput.trim()}
-                aria-label="Copy URL"
-                className="tap flex size-8 items-center justify-center rounded-md bg-elevated text-dim hover:text-foreground disabled:opacity-40"
+                onClick={() => setShowDownloads((v) => !v)}
+                aria-label="Toggle session downloads drawer"
+                className={`tap flex items-center gap-1 rounded-md px-2 py-1.5 font-mono text-xs transition-colors ${
+                  showDownloads || downloads.length > 0
+                    ? "bg-amber/20 text-amber border border-amber/40"
+                    : "bg-elevated text-dim hover:text-foreground"
+                }`}
               >
-                <Copy className="size-3.5" />
+                <FolderDown className="size-3.5" />
+                <span>{downloads.length}</span>
               </button>
               <button
                 type="button"
-                onClick={() => void handleShareUrl()}
-                disabled={!page && !addressInput.trim()}
-                aria-label="Share URL"
-                className="tap flex size-8 items-center justify-center rounded-md bg-elevated text-dim hover:text-foreground disabled:opacity-40"
+                onClick={() => setShowBrowserMenu((v) => !v)}
+                aria-label="More browser options"
+                className={`tap flex size-8 items-center justify-center rounded-md transition-colors ${
+                  showBrowserMenu
+                    ? "bg-amber/25 text-amber"
+                    : "bg-elevated text-dim hover:text-foreground"
+                }`}
               >
-                <Share2 className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleOpenExternal()}
-                disabled={!page && !addressInput.trim()}
-                aria-label="Open in external Tor Browser"
-                title="Open in external Tor Browser"
-                className="tap flex size-8 items-center justify-center rounded-md bg-elevated text-dim hover:text-foreground disabled:opacity-40"
-              >
-                <ExternalLink className="size-3.5" />
+                <MoreHorizontal className="size-4" />
               </button>
             </div>
           </div>
+
+          {/* Find in Page Bar */}
+          {showFindBar && page && (
+            <div className="flex items-center gap-2 border-t border-border-subtle pt-2">
+              <ConsoleInput
+                value={findTerm}
+                onChange={(e) => setFindTerm(e.target.value)}
+                placeholder="Find in page text or source…"
+                className="min-h-9 py-1 text-xs"
+              />
+              <MicroLabel className="shrink-0">
+                {findTerm.trim() ? `${findMatchCount} matches` : "type to search"}
+              </MicroLabel>
+              <button
+                type="button"
+                onClick={() => {
+                  setFindTerm("");
+                  setShowFindBar(false);
+                }}
+                className="tap p-1 text-dim hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Expandable Browser Tools & Security Menu */}
+          {showBrowserMenu && (
+            <div className="space-y-2.5 rounded-md border border-border-subtle bg-elevated/50 p-3 animate-rise">
+              <div className="flex items-center justify-between">
+                <MicroLabel>Browser Security & Transport Controls</MicroLabel>
+                <button
+                  type="button"
+                  onClick={() => setShowBrowserMenu(false)}
+                  className="tap text-dim hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() => setInlineAssets((v) => !v)}
+                  className={`tap flex items-center justify-between rounded border p-2 font-mono text-[11px] ${
+                    inlineAssets
+                      ? "border-signal-green/40 bg-signal-green/15 text-signal-green"
+                      : "border-border-subtle bg-panel text-dim"
+                  }`}
+                >
+                  <span>Tor CSS/Img Proxy</span>
+                  <span>{inlineAssets ? "ON" : "OFF"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBlockWebgl((v) => !v)}
+                  className={`tap flex items-center justify-between rounded border p-2 font-mono text-[11px] ${
+                    blockWebgl
+                      ? "border-signal-green/40 bg-signal-green/15 text-signal-green"
+                      : "border-amber/40 bg-amber/15 text-amber"
+                  }`}
+                >
+                  <span>WebGL/WebRTC Lock</span>
+                  <span>{blockWebgl ? "LOCKED" : "OPEN"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEnableJs((v) => !v)}
+                  className={`tap flex items-center justify-between rounded border p-2 font-mono text-[11px] ${
+                    !enableJs
+                      ? "border-signal-green/40 bg-signal-green/15 text-signal-green"
+                      : "border-signal-red/40 bg-signal-red/15 text-signal-red"
+                  }`}
+                >
+                  <span>JavaScript Engine</span>
+                  <span>{enableJs ? "ENABLED" : "BLOCKED"}</span>
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle pt-2">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyUrl()}
+                  disabled={!page && !addressInput.trim()}
+                  className="tap flex items-center gap-1.5 rounded bg-panel px-2.5 py-1.5 font-mono text-xs text-foreground hover:bg-amber/15 hover:text-amber disabled:opacity-40"
+                >
+                  <Copy className="size-3.5" />
+                  <span>Copy Clean Link</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleShareUrl()}
+                  disabled={!page && !addressInput.trim()}
+                  className="tap flex items-center gap-1.5 rounded bg-panel px-2.5 py-1.5 font-mono text-xs text-foreground hover:bg-amber/15 hover:text-amber disabled:opacity-40"
+                >
+                  <Share2 className="size-3.5" />
+                  <span>Share</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleOpenExternal()}
+                  disabled={!page && !addressInput.trim()}
+                  className="tap flex items-center gap-1.5 rounded bg-panel px-2.5 py-1.5 font-mono text-xs text-foreground hover:bg-amber/15 hover:text-amber disabled:opacity-40"
+                >
+                  <ExternalLink className="size-3.5" />
+                  <span>Open in Tor Browser</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </Panel>
 
@@ -542,7 +723,7 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
             <div className="min-w-0 flex-1">
               <p className="truncate font-mono text-xs text-foreground">{addressInput}</p>
               <p className="mt-0.5 font-mono text-[10px] text-dim">
-                Routing via isolated SOCKS5 stream · remote DNS resolution active
+                Routing via isolated SOCKS5 stream (#{circuitEpoch}) · remote DNS & Tor asset proxy active
               </p>
             </div>
           </div>
@@ -595,20 +776,17 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
             </div>
           ) : viewMode === "web" ? (
             <div className="bg-background">
+              {/* Note: allow-scripts is enabled so the injected link/form interceptor and WebGL/WebRTC shield execute; site <script> tags are stripped unless JS ON is selected */}
               <iframe
                 title={page.title || "Sandboxed Onion Page"}
                 srcDoc={sandboxedSrcDoc}
-                sandbox={
-                  enableJs
-                    ? "allow-scripts allow-forms"
-                    : "allow-forms"
-                }
+                sandbox="allow-scripts allow-forms"
                 referrerPolicy="no-referrer"
-                className="h-[64vh] w-full border-0 bg-background"
+                className="min-h-[70dvh] w-full border-0 bg-background"
               />
             </div>
           ) : viewMode === "reader" ? (
-            <div className="max-h-[64vh] overflow-y-auto p-4">
+            <div className="p-4">
               {page.readerText ? (
                 <article className="space-y-3 font-sans text-sm leading-relaxed text-foreground/95 whitespace-pre-wrap">
                   {page.readerText}
@@ -620,7 +798,7 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
               )}
             </div>
           ) : (
-            <div className="max-h-[64vh] overflow-auto bg-elevated/50 p-3.5">
+            <div className="overflow-x-auto bg-elevated/50 p-3.5">
               <pre className="font-mono text-[11px] leading-relaxed text-foreground/90 whitespace-pre-wrap break-all">
                 {page.body}
               </pre>
@@ -634,7 +812,7 @@ export function InAppBrowser({ initialUrl }: InAppBrowserProps) {
         <div className="space-y-3">
           <EmptyState
             title="Built-in Tor Browser Ready"
-            hint="Browse any .onion or web link directly inside Ghost. Traffic routes through Orbot SOCKS5 with per-host stream isolation, zero disk history, and SHA-256 verified file downloads."
+            hint="Browse any .onion or web link directly inside Ghost. Traffic routes through Orbot SOCKS5 with per-host stream isolation, Tor CSS/image inlining, WebGL/WebRTC fingerprint shields, and SHA-256 verified file downloads."
           />
 
           {bookmarks.length > 0 && (

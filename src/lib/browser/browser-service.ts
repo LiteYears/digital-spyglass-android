@@ -28,8 +28,15 @@ export interface DownloadedFileItem {
   timestamp: number;
 }
 
-/* RAM-only session downloads store */
+export interface BrowserRenderOptions {
+  enableJs: boolean;
+  blockWebgl: boolean;
+  inlineTorAssets?: boolean;
+}
+
+/* RAM-only session downloads and subresource cache */
 let sessionDownloads: DownloadedFileItem[] = [];
+const subresourceCache = new Map<string, string>();
 let browserEpoch = 1;
 const listeners = new Set<() => void>();
 
@@ -44,8 +51,19 @@ export function subscribeDownloads(fn: () => void): () => void {
 
 export function purgeBrowserDownloads(): void {
   sessionDownloads = [];
+  subresourceCache.clear();
   browserEpoch += 1;
   listeners.forEach((fn) => fn());
+}
+
+export function rotateBrowserIdentity(): number {
+  subresourceCache.clear();
+  browserEpoch += 1;
+  return browserEpoch;
+}
+
+export function getBrowserEpoch(): number {
+  return browserEpoch;
 }
 
 function notifyDownloads() {
@@ -141,8 +159,8 @@ export function extractReaderText(html: string): string {
     .replace(/<(h[1-6]|p|li|blockquote|pre|div|br|tr)[^>]*>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/gi, "'");
@@ -154,10 +172,120 @@ export function extractReaderText(html: string): string {
     .join("\n\n");
 }
 
+/**
+ * Fetches external `<link rel="stylesheet">` and `<img src="...">` assets over
+ * the native Tor SOCKS5 bridge so `.onion` stylesheets and images render inside
+ * the Android WebView without clearnet or DNS leaks.
+ */
+async function inlineOnionSubresources(
+  rawHtml: string,
+  baseUrl: string,
+  socksConfig?: { host?: string; port?: number },
+): Promise<string> {
+  if (!(await isNative())) return rawHtml;
+
+  let html = rawHtml;
+  const creds = socksCredentialsForUrl(baseUrl);
+  const ua = "Mozilla/5.0 (Android 10; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0";
+
+  // 1. Inline up to 6 external stylesheets
+  const linkRegex = /<link\b[^>]*rel=["']?stylesheet["']?[^>]*>/gi;
+  const linkMatches = Array.from(html.matchAll(linkRegex)).slice(0, 6);
+  await Promise.all(
+    linkMatches.map(async (m) => {
+      const fullTag = m[0];
+      const hrefMatch = /href=["']([^"']+)["']/i.exec(fullTag);
+      if (!hrefMatch?.[1]) return;
+      try {
+        const resolved = new URL(hrefMatch[1], baseUrl).href;
+        let cssText = subresourceCache.get(resolved);
+        if (cssText === undefined) {
+          const res = await torFetch(resolved, ua, {
+            method: "GET",
+            allowAnyHttp: true,
+            browserMode: true,
+            socksAuth: {
+              user: creds.user,
+              pass: creds.pass,
+              host: socksConfig?.host,
+              port: socksConfig?.port,
+            },
+          });
+          if (res.status >= 200 && res.status < 400 && res.body) {
+            cssText = res.body.replace(/<\/style/gi, "<\\/style");
+            subresourceCache.set(resolved, cssText);
+          }
+        }
+        if (cssText) {
+          html = html.replace(fullTag, `<style data-tor-href="${resolved}">${cssText}</style>`);
+        }
+      } catch {
+        // Leave original tag if fetch fails
+      }
+    }),
+  );
+
+  // 2. Inline up to 14 images (including captcha images on .onion search engines)
+  const imgRegex = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+  const imgMatches = Array.from(html.matchAll(imgRegex)).slice(0, 14);
+  await Promise.all(
+    imgMatches.map(async (m) => {
+      const fullTag = m[0];
+      const rawSrc = m[1];
+      if (!rawSrc || rawSrc.startsWith("data:") || rawSrc.startsWith("blob:")) return;
+      try {
+        const resolved = new URL(rawSrc, baseUrl).href;
+        let dataUri = subresourceCache.get(resolved);
+        if (!dataUri) {
+          const res = await torFetch(resolved, ua, {
+            method: "GET",
+            allowAnyHttp: true,
+            browserMode: true,
+            socksAuth: {
+              user: creds.user,
+              pass: creds.pass,
+              host: socksConfig?.host,
+              port: socksConfig?.port,
+            },
+          });
+          if (res.status >= 200 && res.status < 400 && res.base64) {
+            const mime =
+              res.contentType?.split(";")[0]?.trim() ||
+              (resolved.endsWith(".svg")
+                ? "image/svg+xml"
+                : resolved.endsWith(".gif")
+                  ? "image/gif"
+                  : resolved.endsWith(".webp")
+                    ? "image/webp"
+                    : "image/png");
+            dataUri = `data:${mime};base64,${res.base64}`;
+            subresourceCache.set(resolved, dataUri);
+          }
+        }
+        if (dataUri) {
+          const updatedTag = fullTag.replace(rawSrc, dataUri);
+          html = html.replace(fullTag, updatedTag);
+        }
+      } catch {
+        // Leave original image tag if fetch fails
+      }
+    }),
+  );
+
+  return html;
+}
+
+/**
+ * Prepares HTML for safe rendering inside a sandboxed iframe:
+ * - Injects WebGL, Canvas, AudioContext, and WebRTC fingerprint shields (when blockWebgl is enabled)
+ * - Injects `<base href="...">` and responsive dark/light readable styling
+ * - Intercepts `<a>` clicks and both GET/POST `<form>` submissions so all navigation stays inside Tor
+ */
 export function prepareSandboxedHtml(
   rawHtml: string,
   baseUrl: string,
   enableJs: boolean,
+  blockWebgl = true,
 ): string {
   let html = rawHtml;
   if (!enableJs) {
@@ -165,25 +293,73 @@ export function prepareSandboxedHtml(
   }
 
   const escapedBase = baseUrl.replace(/"/g, "&quot;");
+  const fingerprintShieldScript = blockWebgl
+    ? `
+  // Tor Browser Hardened WebGL / Canvas / WebRTC / AudioContext Anti-Fingerprinting Shield
+  try {
+    var origGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+      if (type && /webgl|experimental-webgl|webgl2|webgpu/i.test(String(type))) {
+        return null;
+      }
+      return origGetContext.call(this, type, attrs);
+    };
+    if (typeof OffscreenCanvas !== "undefined") {
+      var origOffscreen = OffscreenCanvas.prototype.getContext;
+      OffscreenCanvas.prototype.getContext = function(type, attrs) {
+        if (type && /webgl|experimental-webgl|webgl2|webgpu/i.test(String(type))) {
+          return null;
+        }
+        return origOffscreen.call(this, type, attrs);
+      };
+    }
+    // Block WebRTC IP leak vectors
+    window.RTCPeerConnection = undefined;
+    window.webkitRTCPeerConnection = undefined;
+    window.RTCDataChannel = undefined;
+    // Spoof hardware concurrency & device memory to Tor Browser Android baseline
+    Object.defineProperty(navigator, "hardwareConcurrency", { get: function() { return 2; } });
+    Object.defineProperty(navigator, "deviceMemory", { get: function() { return 2; } });
+    Object.defineProperty(navigator, "webdriver", { get: function() { return false; } });
+  } catch (e) {}
+`
+    : "";
+
   const injectedHead = `
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <base href="${escapedBase}" />
 <style>
   :root { color-scheme: dark light; }
-  body {
+  html, body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.55;
+    line-height: 1.6;
     margin: 0;
     padding: 12px;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    -webkit-overflow-scrolling: touch;
   }
-  img, video, iframe, pre, table { max-width: 100%; }
-  pre, code { overflow-x: auto; }
+  img, video, canvas, svg, iframe, pre, table { max-width: 100%; height: auto; }
+  pre, code { overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.9em; }
   a { color: #f59e0b; text-decoration: underline; }
+  input, select, textarea, button {
+    font: inherit;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(15, 23, 42, 0.85);
+    color: #f8fafc;
+  }
+  button, input[type="submit"] {
+    background: #f59e0b;
+    color: #090d16;
+    font-weight: 600;
+    cursor: pointer;
+  }
 </style>
 <script>
+  ${fingerprintShieldScript}
   document.addEventListener("click", function(e) {
     var target = e.target;
     while (target && target.tagName !== "A") {
@@ -196,7 +372,7 @@ export function prepareSandboxedHtml(
       e.stopPropagation();
       try {
         var resolved = new URL(href, document.baseURI).href;
-        window.parent.postMessage({ type: "ghost-browser-nav", url: resolved }, "*");
+        window.parent.postMessage({ type: "ghost-browser-nav", url: resolved, method: "GET" }, "*");
       } catch (err) {}
     }
   }, true);
@@ -204,19 +380,35 @@ export function prepareSandboxedHtml(
   document.addEventListener("submit", function(e) {
     var form = e.target;
     if (!form || form.tagName !== "FORM") return;
-    var method = (form.getAttribute("method") || "GET").toUpperCase();
-    if (method === "GET") {
-      e.preventDefault();
-      try {
-        var action = form.getAttribute("action") || document.baseURI;
-        var url = new URL(action, document.baseURI);
-        var fd = new FormData(form);
-        fd.forEach(function(val, key) {
-          if (typeof val === "string") url.searchParams.set(key, val);
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      var method = (form.getAttribute("method") || "GET").toUpperCase();
+      var action = form.getAttribute("action") || document.baseURI;
+      var url = new URL(action, document.baseURI);
+      var fd = new FormData(form);
+      var params = new URLSearchParams();
+      fd.forEach(function(val, key) {
+        if (typeof val === "string") params.append(key, val);
+      });
+      if (method === "POST") {
+        window.parent.postMessage({
+          type: "ghost-browser-nav",
+          url: url.href,
+          method: "POST",
+          body: params.toString()
+        }, "*");
+      } else {
+        params.forEach(function(val, key) {
+          url.searchParams.set(key, val);
         });
-        window.parent.postMessage({ type: "ghost-browser-nav", url: url.href }, "*");
-      } catch (err) {}
-    }
+        window.parent.postMessage({
+          type: "ghost-browser-nav",
+          url: url.href,
+          method: "GET"
+        }, "*");
+      }
+    } catch (err) {}
   }, true);
 </script>
 `;
@@ -230,10 +422,13 @@ export function prepareSandboxedHtml(
 export async function fetchBrowserUrl(
   rawUrl: string,
   socksConfig?: { host?: string; port?: number },
+  requestOptions?: { method?: "GET" | "POST"; body?: string; inlineSubresources?: boolean },
 ): Promise<BrowserPageResponse> {
   const url = normalizeBrowserUrl(rawUrl);
   if (!url) throw new Error("Empty URL");
 
+  const method = requestOptions?.method ?? "GET";
+  const postBody = requestOptions?.body;
   const creds = socksCredentialsForUrl(url);
   let res: TorFetchResult | null = null;
 
@@ -242,7 +437,8 @@ export async function fetchBrowserUrl(
       url,
       "Mozilla/5.0 (Android 10; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0",
       {
-        method: "GET",
+        method,
+        body: postBody,
         allowAnyHttp: true,
         browserMode: true,
         socksAuth: {
@@ -258,7 +454,7 @@ export async function fetchBrowserUrl(
       const proxyResp = await fetch("/api/tor-fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, method: "GET" }),
+        body: JSON.stringify({ url, method, body: postBody }),
       });
       if (proxyResp.ok) {
         const json = (await proxyResp.json()) as {
@@ -276,7 +472,14 @@ export async function fetchBrowserUrl(
       // Fallback
     }
     if (!res) {
-      const direct = await fetch(url);
+      const direct = await fetch(url, {
+        method,
+        body: method === "POST" ? postBody : undefined,
+        headers:
+          method === "POST"
+            ? { "Content-Type": "application/x-www-form-urlencoded" }
+            : undefined,
+      });
       const text = await direct.text();
       res = {
         status: direct.status,
@@ -291,11 +494,16 @@ export async function fetchBrowserUrl(
   }
 
   const contentType = res.contentType ?? "text/html; charset=utf-8";
-  const body = res.body ?? "";
+  let body = res.body ?? "";
+  const downloadable = isBinaryOrAttachment(contentType, url);
+
+  if (!downloadable && (requestOptions?.inlineSubresources ?? true)) {
+    body = await inlineOnionSubresources(body, url, socksConfig);
+  }
+
   const sizeBytes = res.base64
     ? Math.floor((res.base64.length * 3) / 4)
     : new TextEncoder().encode(body).byteLength;
-  const downloadable = isBinaryOrAttachment(contentType, url);
   const title = downloadable
     ? guessFilename(url, contentType)
     : extractTitle(body, url);
@@ -370,7 +578,7 @@ export async function downloadFileSecurely(
 ): Promise<DownloadedFileItem> {
   const page =
     typeof pageOrUrl === "string"
-      ? await fetchBrowserUrl(pageOrUrl, socksConfig)
+      ? await fetchBrowserUrl(pageOrUrl, socksConfig, { inlineSubresources: false })
       : pageOrUrl;
 
   const bytes = page.base64
