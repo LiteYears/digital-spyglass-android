@@ -57,7 +57,7 @@ import {
   readTransport,
   type TransportInfo,
 } from "../platform/native";
-import { wipeMemoryStores } from "../platform/storage";
+import { secureDeviceVault, wipeMemoryStores } from "../platform/storage";
 import {
   clearGhostSettings,
   defaultGhostSettings,
@@ -169,9 +169,13 @@ export function GhostProvider({ children }: { children: ReactNode }) {
     invalidateTorVerification();
     setSearchQuery("");
     setSearchOutcome(null);
+    void secureDeviceVault.remove("search_query");
+    void secureDeviceVault.remove("search_outcome");
     setBookmarks([]);
+    void secureDeviceVault.remove("bookmarks");
     setFilterState({ sort: "best", onionOnly: false, minEngines: 1 });
     setSessionLog([]);
+    void secureDeviceVault.remove("session_log");
     setCaseEntities([]);
     setLastPurgeAt(Date.now());
     // Breaker history holds lastError strings with full search URLs incl.
@@ -182,8 +186,19 @@ export function GhostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [stored, t] = await Promise.all([loadGhostSettings(), readTransport()]);
+      const [stored, t, savedQ, savedO, savedB, savedL] = await Promise.all([
+        loadGhostSettings(),
+        readTransport(),
+        secureDeviceVault.get<string>("search_query", ""),
+        secureDeviceVault.get<SearchOutcome | null>("search_outcome", null),
+        secureDeviceVault.get<ResultRow[]>("bookmarks", []),
+        secureDeviceVault.get<SessionQueryEvent[]>("session_log", []),
+      ]);
       if (cancelled) return;
+      if (savedQ) setSearchQuery(savedQ);
+      if (savedO) setSearchOutcome(savedO);
+      if (savedB && savedB.length > 0) setBookmarks(savedB);
+      if (savedL && savedL.length > 0) setSessionLog(savedL);
       // Reset disclaimer on every app start — user must acknowledge each session.
       const withResetAck = { ...stored, disclaimerAck: false };
       setSettings(withResetAck);
@@ -348,6 +363,7 @@ export function GhostProvider({ children }: { children: ReactNode }) {
         purgeNow();
         resetBreaker();
         try {
+          await secureDeviceVault.clearAll();
           await clearGhostSettings();
           // Registry import + trusted keys too — the native wipe shreds
           // shared_prefs wholesale, but if that call fails the exitApp
@@ -361,14 +377,22 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       },
       searchQuery,
       searchOutcome,
-      setSearchQuery,
-      setSearchOutcome,
+      setSearchQuery(q: string) {
+        setSearchQuery(q);
+        void secureDeviceVault.set("search_query", q);
+      },
+      setSearchOutcome(o: SearchOutcome | null) {
+        setSearchOutcome(o);
+        void secureDeviceVault.set("search_outcome", o);
+      },
       getSessionEpoch: () => sessionEpochRef.current,
       bookmarks,
       toggleBookmark(row) {
         setBookmarks((prev) => {
           const exists = prev.some((b) => b.key === row.key);
-          return exists ? prev.filter((b) => b.key !== row.key) : [...prev, row];
+          const next = exists ? prev.filter((b) => b.key !== row.key) : [...prev, row];
+          void secureDeviceVault.set("bookmarks", next);
+          return next;
         });
       },
       isBookmarked(key) {
@@ -380,7 +404,11 @@ export function GhostProvider({ children }: { children: ReactNode }) {
       },
       sessionLog,
       logQuery(event) {
-        setSessionLog((prev) => [...prev, { ...event }]);
+        setSessionLog((prev) => {
+          const next = [...prev, { ...event }];
+          void secureDeviceVault.set("session_log", next);
+          return next;
+        });
       },
       caseEntities,
       setCaseEntities(entities) {

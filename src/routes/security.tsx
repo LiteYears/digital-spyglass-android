@@ -576,19 +576,17 @@ function SecurityScreen() {
       <Panel title="what stays on this device">
         <ul className="space-y-2 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
           <li>
-            <span className="text-foreground">Persisted:</span> non-sensitive preferences — engine
-            selection, snippet filter, VPN requirement, Tor proxy endpoint,
-            fast/QARF/paranoid/blacklist toggles — plus the disclaimer acknowledgement. Nothing
-            else.
+            <span className="text-foreground">Encrypted Device Vault:</span> Search results, query
+            state, and bookmarks are encrypted at rest with hardware-accelerated AES-256-GCM.
+            They persist securely on the device without depending on volatile RAM, surviving app exits and low-memory kills.
           </li>
           <li>
-            <span className="text-foreground">Never persisted:</span> queries, results, URLs,
-            timestamps. No history, no cache, no database, no log file.
+            <span className="text-foreground">Zero unencrypted residue:</span> No plain-text queries, URLs,
+            or results are ever written to clear disk storage. Every record uses a fresh 96-bit random IV.
           </li>
           <li>
-            <span className="text-foreground">On screen lock:</span> results and in-flight requests
-            are purged from memory when the screen turns off (screen saver / lock) while “purge on
-            screen lock” is on. Normal app switching (HOME key) keeps the session alive.
+            <span className="text-foreground">Panic Wipe:</span> An instant atomic wipe that cryptographically zeroes
+            and shreds the encrypted vault records, master keys, cookies, and app caches.
           </li>
           <li>
             <span className="text-foreground">Screenshots:</span> blocked by the OS via FLAG_SECURE

@@ -16,48 +16,38 @@ export function DisclaimerGate() {
       role="dialog"
       aria-modal="true"
       aria-label="Research consent"
-      className="safe-top safe-bottom fixed inset-0 z-[60] overflow-y-auto bg-background"
+      className="safe-top safe-bottom fixed inset-0 z-[60] overflow-y-auto bg-background/95 backdrop-blur-md"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-5 px-6 py-10">
-        <div className="space-y-3">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-amber">
+      <div className="mx-auto flex min-h-full w-full max-w-sm flex-col justify-center gap-3.5 px-4 py-6">
+        <div className="space-y-2.5 rounded-xl border border-border-subtle bg-panel/70 p-4 shadow-xl">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
             research tool · adult consent
           </p>
-          <h2 className="text-lg text-foreground">Onion Search — Research Tool</h2>
-          <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+          <h2 className="text-base font-semibold text-foreground">Onion Search — Research Tool</h2>
+          <ul className="space-y-1.5 text-xs leading-relaxed text-muted-foreground">
             <li>
-              This is an open research tool for the Tor network. It aggregates results from public
-              onion search engines. Nothing is filtered — you see everything the engines return.
+              Aggregates results from public onion search engines. You see what the engines return.
             </li>
             <li>
               <strong className="text-foreground">
                 By continuing, you confirm that you are an adult (18+) using this tool for
-                legitimate research purposes — journalism, security research, OSINT, academic study,
-                or personal privacy.
+                legitimate research purposes.
               </strong>{" "}
-              You accept full responsibility for how you use the results and for complying with the
-              laws of your jurisdiction.
+              You accept full responsibility for your use and local compliance.
             </li>
             <li>
-              Page content is never fetched or rendered in this app. Links open externally in Tor
-              Browser. What you open there is your decision and your responsibility.
+              Page content is never fetched in this app; links open externally in Tor Browser or via isolated built-in view.
             </li>
             <li>
-              Nothing is stored on disk: no history, no cache, no database, no telemetry, no
-              accounts. Results stay in RAM for the session and are purged on screen lock, app exit,
-              or via the panic button.
-            </li>
-            <li>
-              This tool does not host, produce, or endorse any content. It is a search aggregator —
-              like any search engine, it links to what others publish.
+              Search results are securely encrypted with AES-256-GCM in the device vault (zero unencrypted cleartext on disk, no telemetry, no tracking accounts), with instant zeroing via Panic Wipe.
             </li>
             <li>Requires a running Tor daemon — Orbot, SOCKS5 on 127.0.0.1:9050.</li>
           </ul>
-          <MicroLabel>shown every session · no persistent tracking · no data collected</MicroLabel>
+          <MicroLabel className="block pt-1">shown every session · no telemetry collected</MicroLabel>
         </div>
         <ActionButton
           variant="primary"
-          className="shrink-0"
+          className="shrink-0 min-h-11"
           onClick={() => void updateSettings({ disclaimerAck: true })}
         >
           I am 18+ — I consent — continue

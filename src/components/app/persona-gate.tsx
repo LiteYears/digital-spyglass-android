@@ -20,15 +20,15 @@ export function PersonaGate() {
       role="dialog"
       aria-modal="true"
       aria-label="Choose your threat model"
-      className="safe-top safe-bottom fixed inset-0 z-[55] overflow-y-auto bg-background"
+      className="safe-top safe-bottom fixed inset-0 z-[55] overflow-y-auto bg-background/95 backdrop-blur-md"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-4 px-6 py-10">
-        <div className="space-y-2">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-amber">
+      <div className="mx-auto flex min-h-full w-full max-w-sm flex-col justify-center gap-3 px-4 py-5">
+        <div className="space-y-1.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
             first run · pick a starting point
           </p>
-          <h2 className="text-lg text-foreground">How do you plan to use Ghost?</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <h2 className="text-base font-semibold text-foreground">How do you plan to use Ghost?</h2>
+          <p className="text-xs leading-relaxed text-muted-foreground">
             This only sets defaults — every switch can be changed later in the Security tab. Nothing
             is sent anywhere.
           </p>
@@ -39,7 +39,7 @@ export function PersonaGate() {
               key={p.id}
               type="button"
               onClick={() => choose(p.id)}
-              className="tap w-full rounded border border-border-subtle px-4 py-3 text-left transition-colors hover:border-amber/60"
+              className="tap w-full rounded-md border border-border-subtle bg-panel/50 px-3 py-2 text-left transition-colors hover:border-amber/60"
             >
               <span className="block text-sm font-medium text-foreground">{p.title}</span>
               <span className="mt-0.5 block text-[11px] text-dim">{p.blurb}</span>

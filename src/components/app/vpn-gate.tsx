@@ -26,13 +26,13 @@ export function VpnGate() {
       aria-label="VPN required"
       className="safe-top safe-bottom fixed inset-0 z-50 overflow-y-auto bg-background/97 backdrop-blur-xl"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-xs flex-col items-center justify-center gap-5 px-6 py-10">
+      <div className="mx-auto flex min-h-full w-full max-w-xs flex-col items-center justify-center gap-3 px-4 py-5">
         <span
           aria-hidden
-          className="relative flex size-20 shrink-0 items-center justify-center rounded-full border border-signal-amber/50"
+          className="relative flex size-14 shrink-0 items-center justify-center rounded-full border border-signal-amber/50"
         >
           <span className="absolute inset-0 animate-ping rounded-full bg-signal-amber/15" />
-          <ShieldAlert className="size-9 text-signal-amber" />
+          <ShieldAlert className="size-7 text-signal-amber" />
         </span>
         <div className="space-y-2 text-center">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-signal-amber">

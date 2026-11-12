@@ -18,7 +18,7 @@ export const defaultGhostSettings: GhostSettings = {
   fastMode: false,
   qarfMode: false,
   blacklistFilter: false,
-  purgeOnScreenOff: true,
+  purgeOnScreenOff: false,
   allowClearnet: false,
   persona: null,
 };

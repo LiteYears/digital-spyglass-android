@@ -363,7 +363,7 @@ function SearchScreen() {
       }
     >
       <div className="space-y-3">
-        <div className="flex flex-wrap gap-1 px-3 pb-0.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none px-3 py-1 flex-nowrap touch-pan-x">
           <Chip
             active={settings.fastMode && settings.engines.length === 0}
             signal={settings.fastMode ? "amber" : "dim"}
@@ -373,7 +373,7 @@ function SearchScreen() {
                 engines: [],
               })
             }
-            className="shrink-0 px-2 py-0.5 text-[10px]"
+            className="shrink-0 px-2.5 py-1 text-[10px]"
           >
             {settings.fastMode ? "fast 5" : "all 13"}
           </Chip>
@@ -434,7 +434,7 @@ function SearchScreen() {
           <Panel pending title="starting search">
             <div className="p-3">
               <MicroLabel>
-                results held in memory only · dropped on screen lock or panic wipe
+                results encrypted in device vault (AES-256-GCM) · persistent on device
               </MicroLabel>
             </div>
           </Panel>
@@ -576,136 +576,159 @@ function SearchScreen() {
               </div>
             )}
             {!resultsCollapsed && (
-              <div ref={scrollRef} className="divide-y divide-border-subtle">
+              <div ref={scrollRef} className="divide-y divide-border-subtle touch-pan-y overscroll-contain">
                 {rows.map((row) => {
                   const bookmarked = isBookmarked(row.key);
                   return (
                     <div
                       key={row.key}
-                      className="px-3.5 py-3 transition-colors hover:bg-amber/5"
+                      className="px-3 py-2.5 transition-colors hover:bg-amber/5 touch-pan-y"
                     >
-                      <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                          {row.onion && <Chip signal="amber">.onion</Chip>}
-                          {row.engines.map((id) => (
-                            <MicroLabel key={id}>{id}</MicroLabel>
+                      <div className="flex items-center justify-between gap-1.5 pb-1">
+                        <div className="flex flex-wrap items-center gap-1 min-w-0">
+                          {row.onion && (
+                            <Chip signal="amber" className="min-h-6 px-1.5 py-0 text-[9px]">
+                              .onion
+                            </Chip>
+                          )}
+                          {row.engines.slice(0, 3).map((id) => (
+                            <MicroLabel key={id} className="text-[9px]">
+                              {id}
+                            </MicroLabel>
                           ))}
+                          {row.engines.length > 3 && (
+                            <MicroLabel className="text-[9px]">+{row.engines.length - 3}</MicroLabel>
+                          )}
                           {row.correlatedCount && row.correlatedCount > 0 && (
-                            <span className="rounded bg-amber/15 px-1.5 py-0.5 font-mono text-[9px] text-amber">
+                            <span className="rounded bg-amber/15 px-1 py-0.5 font-mono text-[8.5px] text-amber">
                               linked ({row.correlatedCount})
                             </span>
                           )}
-                          <div className="ml-auto flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => openInBuiltinBrowser(row.url)}
-                              aria-label="Browse in built-in browser"
-                              className="tap flex items-center gap-1 rounded bg-amber/20 px-2 py-1 font-mono text-[11px] font-medium text-amber transition-colors hover:bg-amber/30 active:scale-95"
-                            >
-                              <Globe className="size-3" />
-                              <span>Browse</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => toggleBookmark(row)}
-                              aria-label={bookmarked ? "Remove bookmark" : "Bookmark result"}
-                              className={`tap flex size-7 items-center justify-center rounded transition-colors ${
-                                bookmarked
-                                  ? "text-amber hover:bg-amber/10"
-                                  : "text-dim hover:bg-foreground/10 hover:text-foreground"
-                              }`}
-                            >
-                              <Bookmark
-                                className="size-3.5"
-                                fill={bookmarked ? "currentColor" : "none"}
-                              />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void copyUrl(row.url)}
-                              aria-label="Copy link"
-                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
-                            >
-                              <Copy className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => shareLink(row.title, row.url)}
-                              aria-label="Share link"
-                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
-                            >
-                              <Share2 className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void openExternalHandler(row.url)}
-                              aria-label="Open in external Tor Browser"
-                              title="Open in external Tor Browser"
-                              className="tap flex size-7 items-center justify-center rounded text-dim transition-colors hover:bg-foreground/10 hover:text-foreground"
-                            >
-                              <ExternalLink className="size-3.5" />
-                            </button>
-                          </div>
                         </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => openInBuiltinBrowser(row.url)}
+                            aria-label="Browse in built-in browser"
+                            className="tap flex items-center gap-1 rounded bg-amber/20 px-2 py-0.5 font-mono text-[10px] font-medium text-amber hover:bg-amber/30 transition-colors"
+                          >
+                            <Globe className="size-2.5" />
+                            <span>Browse</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleBookmark(row)}
+                            aria-label={bookmarked ? "Remove bookmark" : "Bookmark result"}
+                            className={cn(
+                              "tap flex size-6.5 items-center justify-center rounded transition-colors",
+                              bookmarked
+                                ? "text-amber bg-amber/10"
+                                : "text-dim hover:text-foreground hover:bg-foreground/10",
+                            )}
+                          >
+                            <Bookmark
+                              className="size-3"
+                              fill={bookmarked ? "currentColor" : "none"}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copyUrl(row.url)}
+                            aria-label="Copy link"
+                            className="tap flex size-6.5 items-center justify-center rounded text-dim hover:text-foreground hover:bg-foreground/10 transition-colors"
+                          >
+                            <Copy className="size-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => shareLink(row.title, row.url)}
+                            aria-label="Share link"
+                            className="tap flex size-6.5 items-center justify-center rounded text-dim hover:text-foreground hover:bg-foreground/10 transition-colors"
+                          >
+                            <Share2 className="size-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void openExternalHandler(row.url)}
+                            aria-label="Open in external Tor Browser"
+                            title="Open in external Tor Browser"
+                            className="tap flex size-6.5 items-center justify-center rounded text-dim hover:text-foreground hover:bg-foreground/10 transition-colors"
+                          >
+                            <ExternalLink className="size-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Title & URL - clickable links without trapping full-card touch scroll */}
+                      <div className="mt-0.5">
                         <button
                           type="button"
                           onClick={() => void open(row.url)}
-                          className="tap block w-full text-left"
+                          className="tap text-left block w-full group"
                         >
                           <p
-                            className="mt-1 line-clamp-1 text-sm text-foreground"
+                            className="text-xs sm:text-sm font-medium text-foreground group-hover:text-amber transition-colors line-clamp-2"
                             dangerouslySetInnerHTML={{
                               __html: highlightText(row.title, parsedQuery),
                             }}
                           />
-                          <p
-                            className="mt-0.5 line-clamp-1 break-all font-mono text-[11px] text-amber/80"
-                            title={row.url}
-                          >
-                            {row.url}
-                          </p>
-                          {row.withheld ? (
-                            <p className="mt-0.5 line-clamp-2 font-mono text-[11px] text-signal-amber">
-                              {row.snippet || "no snippet"}
-                            </p>
-                          ) : (
-                            <p
-                              className="mt-0.5 line-clamp-2 text-[11px] text-dim"
-                              dangerouslySetInnerHTML={{
-                                __html: highlightText(row.snippet || "no snippet", parsedQuery),
-                              }}
-                            />
-                          )}
-                          {row.scamFlag && (
-                            <div className="mt-1 rounded bg-signal-red/10 px-1.5 py-0.5 font-mono text-[9px] text-signal-red">
-                              ⚠ {row.scamFlag}
-                            </div>
-                          )}
-                          {row.blacklisted && (
-                            <div className="mt-1 rounded bg-signal-red/15 px-1.5 py-0.5 font-mono text-[9px] text-signal-red">
-                              ⚠ ahmia abuse blacklist match
-                            </div>
-                          )}
                         </button>
-                        {row.entities && row.entities.length > 0 && (
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {row.entities.map((entity, i) => (
-                              <EntityBadgeChip
-                                key={`${entity.type}-${i}`}
-                                entity={entity}
-                                reuseCount={lookupReuse(reuseIndex, entity)}
-                                pgp={
-                                  entity.type === "pgp"
-                                    ? (pgpIndex?.get(normalizePgpBlock(entity.value)) ??
-                                      (pgpIndex ? UNPARSED_PGP : undefined))
-                                    : undefined
-                                }
-                              />
-                            ))}
-                          </div>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => void open(row.url)}
+                          className="tap mt-0.5 block text-left break-all font-mono text-[10px] text-amber/80 hover:underline line-clamp-1"
+                          title={row.url}
+                        >
+                          {row.url}
+                        </button>
                       </div>
-                    );
-                  })}
+
+                      {/* Snippet text */}
+                      {row.withheld ? (
+                        <p className="mt-1 line-clamp-2 font-mono text-[10px] text-signal-amber">
+                          {row.snippet || "no snippet"}
+                        </p>
+                      ) : (
+                        <p
+                          className="mt-1 line-clamp-2 text-[10.5px] text-dim leading-relaxed select-text"
+                          dangerouslySetInnerHTML={{
+                            __html: highlightText(row.snippet || "no snippet", parsedQuery),
+                          }}
+                        />
+                      )}
+
+                      {row.scamFlag && (
+                        <div className="mt-1 inline-block rounded bg-signal-red/10 px-1.5 py-0.5 font-mono text-[9px] text-signal-red">
+                          ⚠ {row.scamFlag}
+                        </div>
+                      )}
+                      {row.blacklisted && (
+                        <div className="mt-1 inline-block rounded bg-signal-red/15 px-1.5 py-0.5 font-mono text-[9px] text-signal-red">
+                          ⚠ ahmia abuse blacklist match
+                        </div>
+                      )}
+
+                      {row.entities && row.entities.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {row.entities.map((entity, i) => (
+                            <EntityBadgeChip
+                              key={`${entity.type}-${i}`}
+                              entity={entity}
+                              reuseCount={lookupReuse(reuseIndex, entity)}
+                              pgp={
+                                entity.type === "pgp"
+                                  ? (pgpIndex?.get(normalizePgpBlock(entity.value)) ??
+                                    (pgpIndex ? UNPARSED_PGP : undefined))
+                                  : undefined
+                              }
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Panel>
@@ -757,7 +780,7 @@ function SearchScreen() {
           <div className="space-y-3">
             <EmptyState
               title="No session data"
-              hint="Type a query. Results are aggregated from onion search engines, ranked by RRF agreement, and never written to disk."
+              hint="Type a query. Results are aggregated from onion search engines, ranked by RRF agreement, and securely encrypted in the device vault."
             />
             <div className="rounded-md border border-border-subtle bg-elevated/40 p-3">
               <MicroLabel className="mb-2 block text-dim">Quick query templates</MicroLabel>
