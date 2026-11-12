@@ -40,6 +40,7 @@ SAF may still carry retired literals and raw-package `source` values —
 treat them as dead: re-export, don't analyze.
 `source` is never a raw package name — producers/coarse mapping emit
 `browser` / `share` / `saf-import` / `unknown` only.
+
 - **Passphrase: dedicated watch-export passphrase, never the Vault
   passphrase.** Min 12 chars — same floor as the Vault store: the work set
   is less sensitive, but the passphrase is set once and pays the 2.7 s
@@ -53,9 +54,7 @@ Payload:
 {
   "storeFormat": "reminder-list-v1",
   "exportedAt": 1761820000000,
-  "items": [
-    { "url": "http://abc…def.onion/path", "addedAt": 1761700000000 }
-  ]
+  "items": [{ "url": "http://abc…def.onion/path", "addedAt": 1761700000000 }]
 }
 ```
 
@@ -72,17 +71,17 @@ to parser discipline.
 
 `reminder-list-v1` is always one envelope. At the Vault soft cap (~10k
 items) the payload is ~600 KB. Chunked envelopes exist (Vault v1.1 #5) to
-make *partial salvage* possible — but a work set is re-exportable, so
+make _partial salvage_ possible — but a work set is re-exportable, so
 partial salvage is worthless here and the write complexity buys nothing.
 If the format ever grows past ~5 MB, revisit.
 
 ## Carriage
 
-| Stage | Mechanism | Residual |
-|---|---|---|
-| 0 (default) | Manual SAF export file `watch-export.gwe`, user moves/imports | none beyond user's own file hygiene |
-| 1 (opt-in) | SAF-granted directory, **on-demand write only** | ciphertext at rest in shared storage; manual write per sync cycle |
-| 2 (deferred) | Bound service, caller-cert pinning | not specified here |
+| Stage        | Mechanism                                                     | Residual                                                          |
+| ------------ | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 0 (default)  | Manual SAF export file `watch-export.gwe`, user moves/imports | none beyond user's own file hygiene                               |
+| 1 (opt-in)   | SAF-granted directory, **on-demand write only**               | ciphertext at rest in shared storage; manual write per sync cycle |
+| 2 (deferred) | Bound service, caller-cert pinning                            | not specified here                                                |
 
 Auto-write on Vault item change is **rejected** (timestamp-pattern leak —
 see `GHOST_FAMILY_DOCTRINE.md`, Stage 1).
@@ -106,7 +105,7 @@ version + bundle date), `unreachable-circuit`. Not built in Watch v1
   metadata-only is non-negotiable. **Extended residual** (full text in
   `GHOST_WATCH_CONCEPT.md` §threat model 1): if the passphrase rests on
   the device (Stage-1 polling requires it), credential extraction +
-  SAF write enables *envelope injection* — steering an honest Watch to
+  SAF write enables _envelope injection_ — steering an honest Watch to
   attacker-chosen services and observing the device's Tor behavior
   through attacker endpoints. Passive leak becomes active compromise.
 - Watch's Tor-only property is a **code invariant**; the envelope itself

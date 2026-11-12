@@ -199,7 +199,10 @@ export class LLMClient {
       },
     ];
     const raw = await this.chat(messages, { temperature: 0.1, max_tokens: 512 });
-    const cleaned = stripThinking(raw).replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const cleaned = stripThinking(raw)
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
     try {
       return JSON.parse(cleaned);
     } catch {

@@ -29,8 +29,8 @@ export function PersonaGate() {
           </p>
           <h2 className="text-lg text-foreground">How do you plan to use Ghost?</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            This only sets defaults — every switch can be changed later in the Security tab.
-            Nothing is sent anywhere.
+            This only sets defaults — every switch can be changed later in the Security tab. Nothing
+            is sent anywhere.
           </p>
         </div>
         <div className="space-y-2">

@@ -7,10 +7,8 @@ import {
   pgpKeyFingerprint,
 } from "../pgp";
 
-const HOST_A =
-  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion";
-const HOST_B =
-  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.onion";
+const HOST_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion";
+const HOST_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.onion";
 
 let armoredPublicKey = "";
 let fingerprint = "";
@@ -99,7 +97,8 @@ describe("enrichPgpEntities", () => {
   });
 
   it("records unparsable blocks honestly instead of throwing", async () => {
-    const bogus = "-----BEGIN PGP PUBLIC KEY BLOCK-----\nnot a key\n-----END PGP PUBLIC KEY BLOCK-----";
+    const bogus =
+      "-----BEGIN PGP PUBLIC KEY BLOCK-----\nnot a key\n-----END PGP PUBLIC KEY BLOCK-----";
     const index = await enrichPgpEntities([rowWith(HOST_A, bogus)]);
     const entry = index.get(normalizePgpBlock(bogus))!;
     expect(entry.fingerprint).toBe("");
@@ -118,7 +117,10 @@ describe("enrichPgpEntities", () => {
 
   it("caps distinct blocks per pass (snippet DoS guard)", async () => {
     const rows = Array.from({ length: MAX_PGP_BLOCKS_PER_PASS + 5 }, (_, i) =>
-      rowWith(HOST_A, `-----BEGIN PGP PUBLIC KEY BLOCK-----\nbogus ${i}\n-----END PGP PUBLIC KEY BLOCK-----`),
+      rowWith(
+        HOST_A,
+        `-----BEGIN PGP PUBLIC KEY BLOCK-----\nbogus ${i}\n-----END PGP PUBLIC KEY BLOCK-----`,
+      ),
     );
     const index = await enrichPgpEntities(rows);
     expect(index.size).toBe(MAX_PGP_BLOCKS_PER_PASS);

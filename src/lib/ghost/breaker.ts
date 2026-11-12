@@ -211,10 +211,8 @@ export function getHealthTrend(id: string, lastN = 20): HealthTrend {
   latencies.sort((a, b) => a - b);
   const mean =
     latencies.length > 0 ? latencies.reduce((s, v) => s + v, 0) / latencies.length : undefined;
-  const median =
-    latencies.length > 0 ? latencies[Math.floor(latencies.length / 2)] : undefined;
-  const p95 =
-    latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.95)] : undefined;
+  const median = latencies.length > 0 ? latencies[Math.floor(latencies.length / 2)] : undefined;
+  const p95 = latencies.length > 0 ? latencies[Math.floor(latencies.length * 0.95)] : undefined;
   return {
     engine: id,
     eventCount: slice.length,

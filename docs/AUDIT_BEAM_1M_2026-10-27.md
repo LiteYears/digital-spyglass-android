@@ -63,7 +63,9 @@ Top-level app source (excluding `src/mcp`, `node_modules`, `tmp`):
 - **File:line:** `src/lib/ghost/stix.ts:165-168` (`escapeCsvCell`).
 - **Evidence:**
   ```ts
-  if (/^[\s=+\-@]/.test(value)) { value = `'${value}`; }
+  if (/^[\s=+\-@]/.test(value)) {
+    value = `'${value}`;
+  }
   ```
 - **Trigger path:** a field whose first character is a control char outside `\s` (e.g. `\x01=cmd` or `\x1f+...`) followed by a formula starter. Spreadsheet apps may still evaluate after stripping/ignoring the leading control byte.
 - **Consequence:** a crafted result title/snippet could inject a formula when the CSV is opened in Excel/LibreOffice. The recently hardened whitespace coverage (`\s`) does not extend to the full control range.
@@ -141,20 +143,20 @@ Top-level app source (excluding `src/mcp`, `node_modules`, `tmp`):
 
 Each finding was challenged against three questions: (a) does the cited line actually exist and say what I quoted? (b) is the trigger path reachable in a real build, not just in theory? (c) did I overstate severity? Outcomes:
 
-| Finding | Survived? | Adjustment |
-|---|---|---|
-| F1 | Yes (real, but UI-badge scope only — correlation already case-aware) | Severity MED → LOW; trigger probability low for valid checksummed addresses. |
-| F2 | Yes (verified in code: `filter` absent from purgeNow) | None. |
-| F3 | Yes (verified: `engines.json` has no `sequence`; floor=0) | Reframed as release-hygiene gap, not code defect. Code is correct; artifact is missing. |
-| F4 | Yes (verified: no forbidden-key check, no detail cap) | Confidence M (defense-in-depth, not exploitable today). |
-| F5 | Partially — control chars alone are not formula starters in Excel; only `=,+,-,@,tab` matter | Kept as LOW polish; the whitespace fix already covers the practical case. |
-| F6 | Not a defect — preventive only | Kept as LOW suspicion with Confidence L; labeled "not a current defect". |
-| F7 | Yes as doc drift, not a runtime defect | Severity MED → LOW. |
-| F8 | Yes as trust-boundary note | None; explicitly not a Tor-only violation. |
-| F9 | Yes but extremely low probability | Kept as LOW. |
-| F10 | Yes (verified both functions) | None; fail-closed direction is safe, only UI/badge inconsistency. |
-| F11 | Yes (verified: `null` WebView passed) | None; process is killed, so RAM is cleared anyway. |
-| F12 | Yes (verified: only name pattern + isUp) | None; queries still fail without Orbot SOCKS. |
+| Finding | Survived?                                                                                    | Adjustment                                                                              |
+| ------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| F1      | Yes (real, but UI-badge scope only — correlation already case-aware)                         | Severity MED → LOW; trigger probability low for valid checksummed addresses.            |
+| F2      | Yes (verified in code: `filter` absent from purgeNow)                                        | None.                                                                                   |
+| F3      | Yes (verified: `engines.json` has no `sequence`; floor=0)                                    | Reframed as release-hygiene gap, not code defect. Code is correct; artifact is missing. |
+| F4      | Yes (verified: no forbidden-key check, no detail cap)                                        | Confidence M (defense-in-depth, not exploitable today).                                 |
+| F5      | Partially — control chars alone are not formula starters in Excel; only `=,+,-,@,tab` matter | Kept as LOW polish; the whitespace fix already covers the practical case.               |
+| F6      | Not a defect — preventive only                                                               | Kept as LOW suspicion with Confidence L; labeled "not a current defect".                |
+| F7      | Yes as doc drift, not a runtime defect                                                       | Severity MED → LOW.                                                                     |
+| F8      | Yes as trust-boundary note                                                                   | None; explicitly not a Tor-only violation.                                              |
+| F9      | Yes but extremely low probability                                                            | Kept as LOW.                                                                            |
+| F10     | Yes (verified both functions)                                                                | None; fail-closed direction is safe, only UI/badge inconsistency.                       |
+| F11     | Yes (verified: `null` WebView passed)                                                        | None; process is killed, so RAM is cleared anyway.                                      |
+| F12     | Yes (verified: only name pattern + isUp)                                                     | None; queries still fail without Orbot SOCKS.                                           |
 
 **Falsified / removed:** none of the 12 were dropped, but F1 and F7 were downgraded and F5/F6 were softened. No finding was inflated to HIGH. Two candidates I considered and rejected as non-defects: (a) `purgeNow` not resetting `ready` — `ready` is a boot flag, correctly preserved; (b) `MainActivity.onPause` alpha hack — intentional anti-recents measure, not a defect. I also rejected "storage.ts returns fallback on parse failure" as a defect — that is fail-soft by design.
 
@@ -190,7 +192,7 @@ Twelve findings: 1 MED (F3), 11 LOW (F1, F2, F4, F5, F6, F7, F8, F9, F10, F11, F
 - "ExtractEntities dedup key lowercases all types including base58 wallets — because the case-aware fix landed in case-file.ts/correlation.ts but not in entities.ts:72, so distinct base58 addresses differing by case collapse at extraction time — trigger: any snippet with two case-distinct base58 wallets."
 - "PurgeNow in ghost-context.tsx omits FilterState and index.tsx resultsCollapsed from the reset list — because those states were added later and never wired into the purge — trigger: purge followed by a new search inherits stale filter/collapse."
 - "Bundled engines.json has no sequence field — because the signing script requires --sequence on first run and it has not been applied — so registrySequence returns null, floor becomes 0, and rollback protection is inert for the baseline — trigger: any registry import against the current bundle."
-- "Case-file parser lacks the forbidden-key guard and detail length cap that registry-import has — because the two parsers were hardened separately — trigger: crafted case file with __proto__ or oversized detail."
+- "Case-file parser lacks the forbidden-key guard and detail length cap that registry-import has — because the two parsers were hardened separately — trigger: crafted case file with **proto** or oversized detail."
 - "CSV escapeCsvCell formula guard covers whitespace but not the full control-char range — because the regex is /^[\s=+\-@]/ — trigger: a field beginning with a non-whitespace control char followed by a formula starter."
 - "Case-file sameUrlSet joins URLs with newline, and URL validation does not reject control chars — because validateEntity only checks the http(s) prefix and length — trigger: URL sets that collide on join boundaries."
 - "isOnion (parse.ts) lowercases the hostname but isOnionUrl (http.ts) does not — because the two modules were written independently — trigger: an engine returns an uppercase .ONION URL; badge shows onion but fetch blocks it."

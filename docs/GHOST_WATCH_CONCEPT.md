@@ -19,7 +19,7 @@ never stores a database of its own.
 - **Metadata-only input.** Watch receives `(url, addedAt)` via the
   `reminder-list-v1` envelope — nothing else. Producer-side rule: Vault's
   exporter MUST NOT emit `title`/`note`/`tags`/`source`. This is also
-  the family's first *write-time provenance policy* — who may write
+  the family's first _write-time provenance policy_ — who may write
   what into a persistent store, at which trust level. The same problem
   shape as memory-layer write gates; solved by producer enforcement as
   the primary control, **with parser allowlist as defense-in-depth** —
@@ -37,7 +37,7 @@ never stores a database of its own.
     UI-honesty artifacts (the b2 "nothing to report ≠ never ran"
     display); `badgePending` is a single findings-bit — the minimal
     signal Level C needs so silence is never indistinguishable from
-    "no run". The last-run *summary* (per-category counts) is
+    "no run". The last-run _summary_ (per-category counts) is
     **monitor state and is deliberately not persisted** — it lives in
     memory only; after process death the UI shows "findings —
     details not retained" rather than resurrecting run shape. A
@@ -61,18 +61,18 @@ never stores a database of its own.
   affects Watch only; it must never propagate into a Vault wipe.
   Under R1, Watch has almost no persisted state, so panic must be
   defined honestly: **panic = delete the hardware-wrapped credential
-  + kill the process.** That is the only content worth a panic —
-  the SAF grant is a system grant, the in-memory work set dies with
-  the process anyway. Named cost: a fired panic makes Stage 1
-  unusable until re-enrollment (labeled, revocable, no cascade —
-  consistent with Vault's downward-only asymmetry). Under modes
-  without a stored credential (Stage 0 / option (c)), panic is a
-  plain force-stop and is labeled as such, not dressed as more.
+  - kill the process.** That is the only content worth a panic —
+    the SAF grant is a system grant, the in-memory work set dies with
+    the process anyway. Named cost: a fired panic makes Stage 1
+    unusable until re-enrollment (labeled, revocable, no cascade —
+    consistent with Vault's downward-only asymmetry). Under modes
+    without a stored credential (Stage 0 / option (c)), panic is a
+    plain force-stop and is labeled as such, not dressed as more.
 - **Camouflage — identity decided (2026-10-30):** package
   `org.everyday.reminder`, launcher label `Reminders`/`Erinnerungen`
   (localized, same convention as Vault's Notes/Notizen). The `org.`
-  TLD is deliberate and must be documented as *breaking the family
-  namespace pattern*: a forensic reviewer reads patterns, not
+  TLD is deliberate and must be documented as _breaking the family
+  namespace pattern_: a forensic reviewer reads patterns, not
   strings — `com.`+adjective+noun would re-create the
   `com.plain.notes` signature shape. Category rationale: reminders
   are periodic, background-capable, notification-driven and
@@ -114,6 +114,7 @@ never stores a database of its own.
   `ITERATIONS_BOUNDS` (KDF iterations outside 10k–1M — hostile file
   rejected before work), `CHECK_ERROR` (unexpected). Same taxonomy
   applies to `readWorkSet` (list display) and `runOnce` (check run).
+
 - **Stage 2 — not planned.** Revived only by a specific, named Stage-1
   failure unfixable inside Stage 1 — never by UX dissatisfaction alone.
 
@@ -121,7 +122,7 @@ never stores a database of its own.
 
 1. **Compromised-Build residual (required, explicit):** a compromised
    Watch build can exfiltrate the exported work set `(url, addedAt)` —
-   *bounded by design, not by code*. Vault contents beyond that subset
+   _bounded by design, not by code_. Vault contents beyond that subset
    are structurally unreachable from Watch. This is the statement that
    justifies the metadata-only rule; it is the security story of the
    whole app.
@@ -130,26 +131,27 @@ never stores a database of its own.
    the passive-exfiltration bound above holds only while the envelope
    passphrase stays a user-held secret. If Watch stores the passphrase
    (required for unattended Stage-1 polling), an adversary who
-   extracts that at-rest credential *and* holds SAF write access can
-   forge `reminder-list-v1` envelopes — steering an *honest* Watch build
+   extracts that at-rest credential _and_ holds SAF write access can
+   forge `reminder-list-v1` envelopes — steering an _honest_ Watch build
    into checking attacker-chosen onion services (still Tor-only, but
    attacker-selected destinations: active compromise, not passive
    leak). And steerable contact is broader than destinations: every
    forced check builds a Tor circuit the attacker's own `.onion`
    endpoint can observe — the attacker learns the device's Tor
    behavior (timing, availability windows, circuit fingerprint) and,
-   most importantly, *that this device checks at all*. The leak is not
+   most importantly, _that this device checks at all_. The leak is not
    only which services, but the existence and habits of the device.
-   The boundary then reads: what Watch can exfiltrate *and* what Watch
-   can be made to contact *and what that contact reveals about the
-   device itself*. Decided under §Design decisions 4 — the reason
+   The boundary then reads: what Watch can exfiltrate _and_ what Watch
+   can be made to contact _and what that contact reveals about the
+   device itself_. Decided under §Design decisions 4 — the reason
    Stage-1's credential model is a security decision, not a
    convenience one.
+
 2. **Notification leak:** notification content reveals list membership.
    Decided — see §Notifications. The seizure-naming ban is a **code
    invariant**, not a policy: the seizure notification constructor
    cannot receive an item name.
-3. **Tor-circuit observability:** a local observer sees *that* Watch
+3. **Tor-circuit observability:** a local observer sees _that_ Watch
    opens Tor circuits and when — not where they go. Check timing can
    correlate with user activity. Mitigation space: randomized check
    jitter, batched checks, quiet hours. Residual: unavoidable while
@@ -173,7 +175,7 @@ under R1).
   `127.0.0.1:9050` only proves Orbot runs — it says nothing about the
   service and must not be confused with it.
 - `down`: circuit established, service refused or timed out — declared
-  only after a retry over a *fresh* circuit, so one bad exit cannot
+  only after a retry over a _fresh_ circuit, so one bad exit cannot
   mark a service down. HTTP error responses (4xx/5xx) count as `down`
   but keep a distinguishable sub-code (`down-http-403`,
   `down-timeout`) so notification language stays precise.
@@ -182,7 +184,7 @@ under R1).
   does — it matches signatures, it does not detect seizures: a generic
   takedown page can come from any provider or agency. The result
   carries the list version **and its bundle date** (`matched against
-  v3, bundled 2026-09`) — the age, not the bare version, is what the
+v3, bundled 2026-09`) — the age, not the bare version, is what the
   user needs to weigh staleness; bundled lists go stale between
   releases. Notification language: "matched a
   known seizure signature (list v3, bundled 2026-09) — may be stale,
@@ -211,36 +213,36 @@ under R1).
   fails, Tor cannot build circuits regardless of the live proxy.
   Cost: at most one circuit per run, only in the ambiguous case.
   Two named limitations, accepted rather than fixed:
-    - **The probe target is clearnet.** `www.torproject.org:80`
-      proves circuit + exit; an exit-side or timing observer sees
-      that this device runs Tor, not what it monitors — acceptable
-      because the probe fires only in the ambiguous case, and the
-      alternative (probing a monitored onion) would burn a target-
-      specific circuit and still not isolate onion routing.
-    - **It proves general Tor connectivity, not onion routing.** A
-      working exit circuit can coexist with broken `.onion`
-      descriptor fetches (HSDir unreachable, onion-specific relay
-      failures). That failure class remains indistinguishable from
-      dead services — the matrix honestly cannot separate "services
-      gone" from "onion routing broken", and no wording may claim
-      it can.
-  The wording matrix:
-    - greeting failed → "Tor unavailable — N checks skipped" (items
-      not even attempted)
-    - greeting ok + device offline + nothing up → "Device offline —
-      N checks skipped"
-    - all items unreachable + circuit probe fails → "Tor
-      unavailable — N checks skipped"
-    - all items unreachable + circuit probe ok → "All checks
-      inconclusive — services unreachable or descriptors missing;
-      Tor itself is reachable" ("reachable" now means *circuits*,
-      not "the proxy answered")
-    - partial unreachable → "N check(s) inconclusive — service
-      unreachable or descriptor missing"
-    - any UP/DOWN_* result proves circuits work; no probe needed.
-  **Terminal per item, no retry** (per-item retries only burn circuit
-  churn). Aggregates into a single run-level notification — never
-  per-item, never reported as service-down.
+  - **The probe target is clearnet.** `www.torproject.org:80`
+    proves circuit + exit; an exit-side or timing observer sees
+    that this device runs Tor, not what it monitors — acceptable
+    because the probe fires only in the ambiguous case, and the
+    alternative (probing a monitored onion) would burn a target-
+    specific circuit and still not isolate onion routing.
+  - **It proves general Tor connectivity, not onion routing.** A
+    working exit circuit can coexist with broken `.onion`
+    descriptor fetches (HSDir unreachable, onion-specific relay
+    failures). That failure class remains indistinguishable from
+    dead services — the matrix honestly cannot separate "services
+    gone" from "onion routing broken", and no wording may claim
+    it can.
+    The wording matrix:
+  - greeting failed → "Tor unavailable — N checks skipped" (items
+    not even attempted)
+  - greeting ok + device offline + nothing up → "Device offline —
+    N checks skipped"
+  - all items unreachable + circuit probe fails → "Tor
+    unavailable — N checks skipped"
+  - all items unreachable + circuit probe ok → "All checks
+    inconclusive — services unreachable or descriptors missing;
+    Tor itself is reachable" ("reachable" now means _circuits_,
+    not "the proxy answered")
+  - partial unreachable → "N check(s) inconclusive — service
+    unreachable or descriptor missing"
+  - any UP/DOWN_* result proves circuits work; no probe needed.
+    **Terminal per item, no retry** (per-item retries only burn circuit
+    churn). Aggregates into a single run-level notification — never
+    per-item, never reported as service-down.
 
 **Deferred: `changed`.** Change detection needs a persisted baseline
 to distinguish "changed" from "current" — a run-local hash without
@@ -273,7 +275,7 @@ Three-level posture ladder, one absolute ban.
   the shape of the investigation). The user opens the app immediately
   anyway — the number saves no tap but leaks structure.
   **Post rule: A notifies only when `down > 0 || signature > 0 ||
-  unreachable > 0`.** A pure all-up run is an in-app result, never a
+unreachable > 0`.** A pure all-up run is an in-app result, never a
   notification — noise notifications train the user to ignore the one
   signal that matters, the same failure `unreachable-circuit` exists
   to prevent.
@@ -304,7 +306,7 @@ A reviewer can verify the leak boundary by code audit. Rationale: the
 match alone already achieves the goal (the user opens the app
 immediately); the name in a notification is one saved tap against
 lock-screen/notification-log evidence that this device monitors a
-*specific* seized service — convenience buying an unbounded surface
+_specific_ seized service — convenience buying an unbounded surface
 for no measurable benefit. Not sellable even labeled.
 
 **Visibility:** all Watch notifications post with
@@ -331,11 +333,11 @@ scope widening, clearnet fallback, always-on persistence.
 
 - Static audit: no `new Socket`/`openConnection` without the SOCKS
   proxy; no `InetAddress.getByName`; no `new InetSocketAddress(String,
-  int)` on remote targets (implicitly resolves — `createUnresolved`
+int)` on remote targets (implicitly resolves — `createUnresolved`
   only); no `java.net.*` raw use.
 - Live monitor: during a check run, all traffic binds `127.0.0.1:9050`
   (the Watch equivalent of Vault's aapt zero-caps proof — but as a
-  *code* proof, honestly labeled weaker).
+  _code_ proof, honestly labeled weaker).
 - Forward guard: **no native code in Watch.** The static audit covers
   only managed code paths; native code could bypass the SOCKS proxy
   below the JVM. If native code is ever added, the Tor-only invariant
@@ -389,7 +391,7 @@ scope widening, clearnet fallback, always-on persistence.
     bit stays set, the UI shows a persistent "Notifications
     disabled" banner plus the badge line on next open, and the
     denial is logged. Asserted: `areNotificationsEnabled() ==
-    false` → helper reports false, banner condition held.
+false` → helper reports false, banner condition held.
 
 ## Design decisions — all resolved (2026-10-30)
 
@@ -422,7 +424,7 @@ check yields; status-only produces different content than content-hash).
    credential — an unstored passphrase makes polling impossible and
    Stage 1 meaningless. The real options:
    - **(a) Stored passphrase, labeled** — enables Stage 1; a durable
-     secret at rest on the *bridge node* (network + Vault-derived
+     secret at rest on the _bridge node_ (network + Vault-derived
      data in one process — worse placement than Vault's biometric
      credential). Requires the explicit risk dialog, not a settings
      checkbox.
@@ -433,13 +435,13 @@ check yields; status-only produces different content than content-hash).
        the key is usable from first unlock until reboot. WorkManager
        polling at 03:00 works even while the device is locked.
        Named residual: a stolen, locked device that was unlocked at
-       least once this boot is *in scope* of the at-rest threat —
+       least once this boot is _in scope_ of the at-rest threat —
        the protection is "unusable after reboot", not "unusable
        while locked".
      - **(b2) `setUnlockedDeviceRequired(true)` — strict mode:**
        the key exists only while the device is actively unlocked.
        Real protection — but unattended polling is structurally
-       impossible; Stage 1 becomes *semi-attended* (checks run only
+       impossible; Stage 1 becomes _semi-attended_ (checks run only
        while the device happens to be in use). Optional posture for
        users who accept that bound — **with mandatory UI honesty:**
        the opt-in dialog says verbatim "Strict mode: checks run only
@@ -450,22 +452,22 @@ check yields; status-only produces different content than content-hash).
        Without this, (b2) is a silent-failure mode — the same class
        `unreachable-circuit` exists to prevent, re-introduced one
        layer up.
-     **Primary choice: (b1) with its residual written above; (b2)
-     as a selectable posture.** Without naming this fork,
-     "hardware-wrapped" promises a protection the implementation
-     may or may not deliver.
+       **Primary choice: (b1) with its residual written above; (b2)
+       as a selectable posture.** Without naming this fork,
+       "hardware-wrapped" promises a protection the implementation
+       may or may not deliver.
    - **(c) No at-rest credential** — passphrase re-prompted per run;
      Stage 1 collapses to a manual trigger (session-scoped secret,
      Stage-0-adjacent). If this is ever chosen, Stage 1 must be
-     honestly marked *not implemented* rather than kept as a
+     honestly marked _not implemented_ rather than kept as a
      "target design" that cannot fulfill its own convenience claim.
-   **Decision: (b1) primary, (b2) selectable posture, (a) as labeled
-   fallback where hardware is unavailable** — and either way the
-   extended residual applies: any at-rest credential enables the
-   envelope-injection class (§threat model 1): an adversary
-   extracting it plus SAF write can steer an honest Watch build to
-   attacker-chosen services and observe the device's Tor behavior
-   through their own endpoints. The passphrase ceases to be a
-   user-held secret and becomes a device-held secret on the
-   network node — the residual sentence covers *steerable contact
-   plus device observability*, not only exfiltration.
+     **Decision: (b1) primary, (b2) selectable posture, (a) as labeled
+     fallback where hardware is unavailable** — and either way the
+     extended residual applies: any at-rest credential enables the
+     envelope-injection class (§threat model 1): an adversary
+     extracting it plus SAF write can steer an honest Watch build to
+     attacker-chosen services and observe the device's Tor behavior
+     through their own endpoints. The passphrase ceases to be a
+     user-held secret and becomes a device-held secret on the
+     network node — the residual sentence covers _steerable contact
+     plus device observability_, not only exfiltration.

@@ -14,11 +14,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            "li.result",
-            "ol.searchResults li",
-            ".result"
-          ],
+          "blocks": ["li.result", "ol.searchResults li", ".result"],
           "link": "h4 a",
           "snippet": "p"
         }
@@ -54,11 +50,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            "table tr",
-            "div.result",
-            "dl.searchResults dt"
-          ],
+          "blocks": ["table tr", "div.result", "dl.searchResults dt"],
           "link": "td b a",
           "snippet": "td small, p, dd"
         }
@@ -88,11 +80,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            ".result",
-            "div.card",
-            "li"
-          ],
+          "blocks": [".result", "div.card", "li"],
           "snippet": "p, .description"
         }
       },
@@ -152,11 +140,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            ".result",
-            ".search-result",
-            "li"
-          ],
+          "blocks": [".result", ".search-result", "li"],
           "snippet": ".description, p"
         }
       },
@@ -185,12 +169,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            "div.mx-auto",
-            ".result",
-            ".search-result",
-            "li"
-          ],
+          "blocks": ["div.mx-auto", ".result", ".search-result", "li"],
           "link": "h6 a, a",
           "snippet": "p.text-truncate, p, .description, .snippet"
         }
@@ -220,11 +199,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            "div.results",
-            ".result",
-            "li.result"
-          ],
+          "blocks": ["div.results", ".result", "li.result"],
           "link": "h2 a",
           "snippet": "p.site_desc, .snippet, p, .description"
         }
@@ -280,12 +255,7 @@
       "parser": {
         "type": "selectors",
         "spec": {
-          "blocks": [
-            "div.rezultat",
-            ".result",
-            ".search-result",
-            "li"
-          ],
+          "blocks": ["div.rezultat", ".result", ".search-result", "li"],
           "link": "h3 a",
           "snippet": "cite, .description, p, .snippet"
         }

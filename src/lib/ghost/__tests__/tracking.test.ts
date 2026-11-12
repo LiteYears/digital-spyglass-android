@@ -1,22 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { stripTrackingParams } from "../tracking";
 
-const ONION =
-  "http://abcdefghijklmnopabcdefghijklmnopabcdefghijklmnopabcdefghijklmnop.onion";
+const ONION = "http://abcdefghijklmnopabcdefghijklmnopabcdefghijklmnopabcdefghijklmnop.onion";
 
 describe("stripTrackingParams", () => {
   it("strips utm_* parameters and keeps the real ones", () => {
-    const r = stripTrackingParams(
-      `${ONION}/market?id=7&utm_source=ghost&utm_campaign=x`,
-    );
+    const r = stripTrackingParams(`${ONION}/market?id=7&utm_source=ghost&utm_campaign=x`);
     expect(r.url).toBe(`${ONION}/market?id=7`);
     expect(r.stripped).toEqual(["utm_source", "utm_campaign"]);
   });
 
   it("strips known click identifiers (fbclid, gclid, msclkid…)", () => {
-    const r = stripTrackingParams(
-      `${ONION}/p?fbclid=abc&gclid=x&msclkid=y&keep=1`,
-    );
+    const r = stripTrackingParams(`${ONION}/p?fbclid=abc&gclid=x&msclkid=y&keep=1`);
     expect(r.url).toBe(`${ONION}/p?keep=1`);
     expect(r.stripped).toEqual(["fbclid", "gclid", "msclkid"]);
   });

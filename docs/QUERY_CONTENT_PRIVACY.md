@@ -56,18 +56,19 @@ llama.cpp fork (verified build: `prism-b10826-c9c34bc`) — stock upstream
 `llama-server` and bundled runtimes (incl. current Ollama) reject or
 mis-dequantize them, silently losing the speed advantage or failing
 outright. The alternative `Q2_0` weight file runs on upstream llama.cpp
->= b11555. The BYOM docs must name the required fork/binary and the
-exact model file — "just start llama-server" is a support trap.
+
+> = b11555. The BYOM docs must name the required fork/binary and the
+> exact model file — "just start llama-server" is a support trap.
 
 ## Reuse map — build ON phase5, do not rebuild it
 
-| Existing (live in `camouflage.ts`) | Role for this layer |
-|---|---|
-| `startIdleDecoyScheduler(meanMs)` | Extend: besides transport dummies, periodically top up the SLM decoy pool (target size ~5–10) |
-| `fireDecoys` / `SocksAuth` / `fetchBodyOnly` | Fire path for semantic decoy queries at real engine search URLs |
-| `paranoidMode` flag + personas UI | Tier plumbing already exists — extend to 3 tiers instead of inventing new settings |
-| `sampleRayleigh` / `assignSurgeDelays` / CSPRNG | Timing infra the decoy fan-out must keep using |
-| `security.tsx` paranoid hint | Extend with the honest-label text for tier 3 |
+| Existing (live in `camouflage.ts`)              | Role for this layer                                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `startIdleDecoyScheduler(meanMs)`               | Extend: besides transport dummies, periodically top up the SLM decoy pool (target size ~5–10) |
+| `fireDecoys` / `SocksAuth` / `fetchBodyOnly`    | Fire path for semantic decoy queries at real engine search URLs                               |
+| `paranoidMode` flag + personas UI               | Tier plumbing already exists — extend to 3 tiers instead of inventing new settings            |
+| `sampleRayleigh` / `assignSurgeDelays` / CSPRNG | Timing infra the decoy fan-out must keep using                                                |
+| `security.tsx` paranoid hint                    | Extend with the honest-label text for tier 3                                                  |
 
 New code needed: SLM endpoint client, decoy pool (RAM-only, purged like all
 search state), style-neutralize call with ~15 s soft-fail timeout, per-engine
@@ -80,7 +81,7 @@ and real-vs-decoy result filtering at merge time.
 - **Tier 2 — enhanced transport:** existing `paranoidCamouflage` (transport
   decoys, shipped)
 - **Tier 3 — content privacy:** Tier 2 + SLM rewrite + semantic decoys.
-  Default-on *within* Tier 3; the SLM feature itself is opt-in for lower tiers.
+  Default-on _within_ Tier 3; the SLM feature itself is opt-in for lower tiers.
   Open at wiring time: the frozen design makes it on within Tier 3, while
   repo policy defaults new flags OFF; decide explicitly and document it.
   Without a reachable model, Tier 3 behaves as Tier 2 plus a status line.

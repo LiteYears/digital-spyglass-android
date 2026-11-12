@@ -12,19 +12,19 @@ and opens links externally in Tor Browser.
 
 ## Data We Do NOT Collect
 
-| Category | Status |
-|----------|--------|
-| Personal information (name, email, phone) | **Not collected** |
-| Search queries | **Not stored** — exist only in RAM during the active session, purged on screen-off / panic wipe / app exit |
-| Search results | **Not stored** — exist only in RAM during the active session, purged on screen-off / panic wipe / app exit |
-| Browsing history | **Not collected** — links open in Tor Browser (external app) |
-| Device identifiers | **Not collected** |
-| IP address | **Not collected** — all traffic goes through Orbot/Tor |
-| Location data | **Not collected** |
-| Cookies | **Not collected** — per-host cookie jar exists only in RAM for engine captcha flows, purged on exit |
-| Crash logs | **Not collected** — no crash reporting SDK |
-| Usage analytics | **Not collected** — no analytics SDK |
-| Advertising data | **Not collected** — no ads |
+| Category                                  | Status                                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Personal information (name, email, phone) | **Not collected**                                                                                          |
+| Search queries                            | **Not stored** — exist only in RAM during the active session, purged on screen-off / panic wipe / app exit |
+| Search results                            | **Not stored** — exist only in RAM during the active session, purged on screen-off / panic wipe / app exit |
+| Browsing history                          | **Not collected** — links open in Tor Browser (external app)                                               |
+| Device identifiers                        | **Not collected**                                                                                          |
+| IP address                                | **Not collected** — all traffic goes through Orbot/Tor                                                     |
+| Location data                             | **Not collected**                                                                                          |
+| Cookies                                   | **Not collected** — per-host cookie jar exists only in RAM for engine captcha flows, purged on exit        |
+| Crash logs                                | **Not collected** — no crash reporting SDK                                                                 |
+| Usage analytics                           | **Not collected** — no analytics SDK                                                                       |
+| Advertising data                          | **Not collected** — no ads                                                                                 |
 
 ## Data We Do NOT Store
 

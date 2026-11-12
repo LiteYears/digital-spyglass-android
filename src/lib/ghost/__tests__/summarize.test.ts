@@ -27,7 +27,11 @@ describe("splitSentences / tokenizeContent", () => {
   });
 
   it("tokenizes lowercase alphanumerics and removes stopwords", () => {
-    expect(tokenizeContent("The Escrow MARKET is not a game!")).toEqual(["escrow", "market", "game"]);
+    expect(tokenizeContent("The Escrow MARKET is not a game!")).toEqual([
+      "escrow",
+      "market",
+      "game",
+    ]);
   });
 });
 
@@ -35,9 +39,7 @@ describe("summarizeRows", () => {
   it("returns null with fewer than two usable sentences", () => {
     expect(summarizeRows([row({ snippet: "Only one sentence here." })])).toBeNull();
     expect(summarizeRows([])).toBeNull();
-    expect(
-      summarizeRows([row({ snippet: "Short." }), row({ snippet: "Also short." })]),
-    ).toBeNull();
+    expect(summarizeRows([row({ snippet: "Short." }), row({ snippet: "Also short." })])).toBeNull();
   });
 
   it("prefers sentences shared across snippets over unrelated ones", () => {
@@ -63,8 +65,7 @@ describe("summarizeRows", () => {
       row({
         key: "d",
         url: "http://dddddddddddddddddddddddddddddddddddddddddddddddddddddddd.onion/d",
-        snippet:
-          "The weather forecast predicts rain clouds over the coastal city tonight again.",
+        snippet: "The weather forecast predicts rain clouds over the coastal city tonight again.",
       }),
     ];
     const summary = summarizeRows(rows, { maxSentences: 2 })!;
@@ -82,7 +83,11 @@ describe("summarizeRows", () => {
 
   it("skips withheld (liability-filtered) snippets", () => {
     const rows = [
-      row({ key: "w", snippet: "Escrow market vendor tracking product shipping withheld.", withheld: true }),
+      row({
+        key: "w",
+        snippet: "Escrow market vendor tracking product shipping withheld.",
+        withheld: true,
+      }),
       row({ snippet: "Vendor escrow market tracking product shipping details inside." }),
       row({ snippet: "Escrow market tracking product shipping vendor terms explained." }),
     ];
@@ -116,13 +121,19 @@ describe("summarizeRows", () => {
 
   it("returns selected sentences in original reading order", () => {
     const rows = [
-      row({ key: "late", snippet: "Escrow market vendor tracking product shipping zebra sentence arrives later." }),
-      row({ key: "early", snippet: "Vendor escrow market tracking product shipping alpha sentence comes first." }),
+      row({
+        key: "late",
+        snippet: "Escrow market vendor tracking product shipping zebra sentence arrives later.",
+      }),
+      row({
+        key: "early",
+        snippet: "Vendor escrow market tracking product shipping alpha sentence comes first.",
+      }),
     ];
     const summary = summarizeRows(rows, { maxSentences: 2 })!;
-    expect(summary.selected.map((s) => s.position)).toEqual([...summary.selected]
-      .map((s) => s.position)
-      .sort((a, b) => a - b));
+    expect(summary.selected.map((s) => s.position)).toEqual(
+      [...summary.selected].map((s) => s.position).sort((a, b) => a - b),
+    );
   });
 
   it("carries the honest extractive caution label", () => {

@@ -36,17 +36,20 @@ errors, miss critical context, and frustrate the operator.
 8. Wait for operator task
 
 **If you skip Step 2, you will:**
+
 - Not know what happened in the last session
 - Not know the current research state (Agent Gate v2, EMA, validation results)
 - Not know the next proposed work item
 - Start cold on a project you should have context for
 
 **If you skip Step 5, you will:**
+
 - Not know which strategies worked or failed
 - Not know the current EMA/calibration state
 - Repeat past mistakes that were already learned
 
 **If you skip Step 6, you will:**
+
 - Risk publishing private research
 - Mix worldbase and physarum-learning code/workflows
 - Violate the operator's explicit privacy requirements
@@ -84,6 +87,7 @@ AGENTS.md is truncated in IDE rules. Use the `read` tool to load the
 full file before any action.
 
 Detect which repo you are in by checking the current working directory:
+
 - `D:\MCP Mods\worldbase` -> WorldBase/IntelShed (public, open-source)
 - `D:\MCP Mods\HAK_GAL_HEXAGONAL\affect_sidecar` -> physarum-learning (PRIVATE research)
 - `D:\MCP Mods\digital-spyglass-android` -> Ghost Search Android (Tor onion search app)
@@ -98,15 +102,18 @@ This step is MANDATORY. Without it, you start cold on the project's
 current state, research results, and next steps.
 
 **If in WorldBase (`D:\MCP Mods\worldbase`):**
+
 - `LLM_HANDOFF.md` — operator runtime notes, preferences, measured state
 - `progress.txt` — last 20 lines for current session stand
 
 **If in physarum-learning (`D:\MCP Mods\HAK_GAL_HEXAGONAL\affect_sidecar`):**
+
 - `HANDOFF.md` — main handoff with last session summary, current research state
 - `HANDOFF_NEXT_INSTANCE.md` — next instance priorities and warnings
 - `GRUNDGESETZ.md` — constitution and inviolable rules
 
 **If in Ghost Search Android (`D:\MCP Mods\digital-spyglass-android`):**
+
 - No AGENTS.md in this repo — global rules from worldbase apply
 - `tmp/fdroid-review/NEXTSTATE.md` — the F-Droid lane boot file, THE
   single mandatory read when the lane is active (playbook §14): round
@@ -128,10 +135,12 @@ that project's HANDOFF files.** The projects share infrastructure
 (PostgreSQL, MCP, hooks) and the operator frequently works across both.
 
 **If the task involves Agent Gate research, ALSO read:**
+
 - `docs/science/AGENT_GATE_V2_MATHEMATICAL_SPECIFICATION.md` (Sections 9-12 minimum)
 - `docs/CLAIMS_AND_GATES.md`
 
 **If the task involves system integrity, ALSO read:**
+
 - `docs/SYSTEM_INTEGRITY_PLAN_2026.md`
 
 Report in the Stand which HANDOFF files were read and the key findings
@@ -144,12 +153,12 @@ Devin's native Rules mechanism, NOT via hook-injected DB tables.
 
 **Trait delivery (3 layers):**
 
-| Layer | Mechanism | When loaded | Count |
-|-------|-----------|-------------|-------|
-| P0 — Critical | Global Rules `%APPDATA%\devin\AGENTS.md` | Every session, every project | 6 |
-| P1 — High | `.devin/rules/p1-traits.md` (trigger: always_on) | Every session in this project | 6 |
-| P2 — Medium | `.devin/rules/p2-traits.md` (trigger: model_decision) | When agent decides relevant | 4 |
-| META | Inside p2-traits.md | Before creating new traits | 1 |
+| Layer         | Mechanism                                             | When loaded                   | Count |
+| ------------- | ----------------------------------------------------- | ----------------------------- | ----- |
+| P0 — Critical | Global Rules `%APPDATA%\devin\AGENTS.md`              | Every session, every project  | 6     |
+| P1 — High     | `.devin/rules/p1-traits.md` (trigger: always_on)      | Every session in this project | 6     |
+| P2 — Medium   | `.devin/rules/p2-traits.md` (trigger: model_decision) | When agent decides relevant   | 4     |
+| META          | Inside p2-traits.md                                   | Before creating new traits    | 1     |
 
 **What to do for Step 3:**
 
@@ -162,22 +171,23 @@ Devin's native Rules mechanism, NOT via hook-injected DB tables.
 
 **Output format (P0 + P1 only, 12 rows):**
 
-| # | Trait | Priority | Avoidance strategy |
-|---|-------|----------|-------------------|
-| 1 | SuperMemory-First | P0 | Will search_memory before any operator question |
-| 2 | Codeberg-Not-GitHub | P0 | Will use codeberg remote, not origin |
-| 3 | No-Devin-Attribution | P0 | Will not add Devin attribution to commits |
-| 4 | Operator-Is-Last-Resort | P0 | Will exhaust all tools before asking operator |
-| 5 | Read-Before-Overwrite | P0 | Will read files before overwriting |
-| 6 | Operational-Neutrality | P0 | Will use neutral technical language in all public artifacts |
-| 7 | PowerShell-No-Heredoc | P1 | Will use temp files + git commit -F |
-| 8 | Verify-Before-Claim | P1 | Will run checks before claiming success |
-| 9 | Auto-Tracking-Mandatory | P1 | Will log every message/response, interactive EMA |
-| 10 | Recurring-Complaints-Are-Lessons | P1 | Will capture repeated operator complaints |
-| 11 | Verify-Branch-Dependency-Before-PR | P1 | Will tsc+tests on base branch before PR |
-| 12 | No-Empty-Commits | P1 | Will not make empty commits, verify CI state |
+| #   | Trait                              | Priority | Avoidance strategy                                          |
+| --- | ---------------------------------- | -------- | ----------------------------------------------------------- |
+| 1   | SuperMemory-First                  | P0       | Will search_memory before any operator question             |
+| 2   | Codeberg-Not-GitHub                | P0       | Will use codeberg remote, not origin                        |
+| 3   | No-Devin-Attribution               | P0       | Will not add Devin attribution to commits                   |
+| 4   | Operator-Is-Last-Resort            | P0       | Will exhaust all tools before asking operator               |
+| 5   | Read-Before-Overwrite              | P0       | Will read files before overwriting                          |
+| 6   | Operational-Neutrality             | P0       | Will use neutral technical language in all public artifacts |
+| 7   | PowerShell-No-Heredoc              | P1       | Will use temp files + git commit -F                         |
+| 8   | Verify-Before-Claim                | P1       | Will run checks before claiming success                     |
+| 9   | Auto-Tracking-Mandatory            | P1       | Will log every message/response, interactive EMA            |
+| 10  | Recurring-Complaints-Are-Lessons   | P1       | Will capture repeated operator complaints                   |
+| 11  | Verify-Branch-Dependency-Before-PR | P1       | Will tsc+tests on base branch before PR                     |
+| 12  | No-Empty-Commits                   | P1       | Will not make empty commits, verify CI state                |
 
 **Rules for avoidance strategies:**
+
 - "Acknowledged" alone is NOT sufficient. State the concrete alternative action.
 - If the trait does not apply to the current task, say "Not applicable this session."
 - If the trait requires reading a file first, mark as "Pending — will read before action."
@@ -190,6 +200,7 @@ Rules files are authoritative. The old DB traits were compressed into the
 canonical set on 2026-08-25.
 
 **If P0/P1 Rules files are missing:**
+
 1. Search SuperMemory: `search_memory(query='canonical trait compression 2026-08-25')`
 2. Check `.devin/canonical_traits.md` for the full 17-trait listing
 3. If still missing: traits are lost. Reconstruct from SuperMemory session reports.
@@ -215,6 +226,7 @@ violation.
 fired correctly. If NOT, see Step 3 fallback.
 
 **5b. Call `affect_session_briefing`** via physarum-learning MCP:
+
 - Tool: `affect_session` meta-tool, sub-tool `affect_session_briefing`
 - Parameter: `session_id` (use current session identifier or "pending")
 - Returns: EMA history, rubric scores, turn log, calibration trend,
@@ -222,6 +234,7 @@ fired correctly. If NOT, see Step 3 fallback.
 - This is the learning cycle: last session informs this session
 
 **5c. Call `affect_context_load`** via physarum-learning MCP:
+
 - Tool: `affect_context_load` (limit=5)
 - Returns: Historical affective context from past session reports
   (best/worst strategies, common triggers, emotional trajectory,
@@ -229,6 +242,7 @@ fired correctly. If NOT, see Step 3 fallback.
 - This is the cross-session memory: patterns from past 5+ sessions
 
 **5f. Digital Brain init** via digital-brain MCP (Layer 4, mandatory):
+
 - `brain_query("memory stats")` — entity/relation/observation counts
 - `brain_query("decay candidates")` — candidates listed at init,
   executed only at session close (Trait 8 ritual)
@@ -241,12 +255,14 @@ fired correctly. If NOT, see Step 3 fallback.
   forever — physarum briefing covers the context fallback.
 
 **5d. Search SuperMemory** for session topic:
+
 - Tool: `search_memory` with 2-3 keywords from operator's first message
 - The operator is the Re-Surfacer: if he says something that sounds
   new, it likely already exists in SuperMemory. Treat operator
   statements as retrieval triggers, not new information.
 
 **5e. Query Memory MCP KG** for structural context:
+
 - Tool: `search_nodes("physarum_session")` via `memory` MCP
 - Returns: Last sessions + their PRs + dependencies
 
@@ -297,8 +313,9 @@ The Stand must include ALL of the following:
 
 Do NOT start work items, list priorities, or run health checks until
 the operator gives a task. The checklist confirmation + HANDOFF reading
-+ ACP session start + boundary confirmation IS the initialization.
-Health checks and git status come AFTER the operator directs work.
+
+- ACP session start + boundary confirmation IS the initialization.
+  Health checks and git status come AFTER the operator directs work.
 
 ## What NOT to do
 
@@ -324,6 +341,7 @@ Health checks and git status come AFTER the operator directs work.
 ## Session end
 
 `stop_guard.py` reminds you to:
+
 1. EMA (interactive via `ask_user_question`) -> **record via `affect_record` MCP tool** (query='record EMA', valence=X, arousal=X, ...)
 2. Rubric (interactive via `ask_user_question`) -> **record via `affect_record` MCP tool** (query='record rubric', task_completion=X, ...)
 3. Session report (`affect_session` MCP tool, query='session report')
@@ -332,6 +350,7 @@ Health checks and git status come AFTER the operator directs work.
 6. **Self-error reflection** — identify technical errors you made, persist each via `affect_memory` MCP tool (query='add trait', context='agent_technical_error')
 
 **CRITICAL — MCP tools, not shell commands:**
+
 - EMA -> `affect_record` with query='record EMA' -> NOT psql INSERT
 - Rubric -> `affect_record` with query='record rubric' -> NOT psql INSERT
 - Session report -> `affect_session` with query='session report' -> NOT manual SuperMemory add_memory

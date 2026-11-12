@@ -79,9 +79,7 @@ async function deriveAesGcmKey(
 }
 
 function buildEnvelopeAad(format: string, iterations: number): Uint8Array {
-  return new TextEncoder().encode(
-    `${format}|PBKDF2-HMAC-SHA256|${iterations}|AES-256-GCM`,
-  );
+  return new TextEncoder().encode(`${format}|PBKDF2-HMAC-SHA256|${iterations}|AES-256-GCM`);
 }
 
 /**

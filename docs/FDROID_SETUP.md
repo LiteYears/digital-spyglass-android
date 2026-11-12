@@ -86,29 +86,34 @@ without adding a custom repo.
    - Click **Fork**
 
 3. **Clone your fork:**
+
    ```sh
    git clone https://gitlab.com/YOUR_USERNAME/fdroiddata.git
    cd fdroiddata
    ```
 
 4. **Copy the metadata file:**
+
    ```sh
    # Download from GitHub or copy from this repo's metadata/ directory
    cp /path/to/org.darknetcrawler.mobile.yml metadata/
    ```
 
 5. **Validate the metadata:**
+
    ```sh
    fdroid checkmetadata org.darknetcrawler.mobile
    fdroid readmeta
    ```
 
 6. **Test the build locally (optional but recommended):**
+
    ```sh
    fdroid build org.darknetcrawler.mobile:1
    ```
 
 7. **Commit and push:**
+
    ```sh
    git add metadata/org.darknetcrawler.mobile.yml
    git commit -m "New app: org.darknetcrawler.mobile"
@@ -131,14 +136,14 @@ without adding a custom repo.
 
 ### What F-Droid Reviews
 
-| Check | Status |
-|-------|--------|
-| Open-source license | GPL-3.0-or-later — pass |
-| No proprietary deps | All deps are open-source — pass |
-| No anti-features | No ads, tracking, or non-free code — pass |
-| Reproducible build | Build config in metadata — pass |
-| No Google Play Services | Not used — pass |
-| Active maintenance | Recent commits and release — pass |
+| Check                   | Status                                    |
+| ----------------------- | ----------------------------------------- |
+| Open-source license     | GPL-3.0-or-later — pass                   |
+| No proprietary deps     | All deps are open-source — pass           |
+| No anti-features        | No ads, tracking, or non-free code — pass |
+| Reproducible build      | Build config in metadata — pass           |
+| No Google Play Services | Not used — pass                           |
+| Active maintenance      | Recent commits and release — pass         |
 
 ## Option 3: Direct APK (GitHub Releases)
 
@@ -152,10 +157,10 @@ Users must enable "Install from unknown sources" in Android settings.
 
 ## Signing Notes
 
-| Key | Purpose | Where |
-|-----|---------|-------|
-| `release-keystore.jks` | APK signing (developer key) | Local only, gitignored |
-| `keystore.p12` | F-Droid repo index signing | gh-pages branch, gitignored |
+| Key                    | Purpose                     | Where                       |
+| ---------------------- | --------------------------- | --------------------------- |
+| `release-keystore.jks` | APK signing (developer key) | Local only, gitignored      |
+| `keystore.p12`         | F-Droid repo index signing  | gh-pages branch, gitignored |
 
 The APK is signed with the developer's key. The F-Droid repo index is signed
 with a separate F-Droid repo key. If the official F-Droid repo accepts the

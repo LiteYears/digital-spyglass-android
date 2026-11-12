@@ -1,0 +1,34 @@
+rootProject.name = "Ghost"
+
+include ':app'
+project(':app').projectDir = new File(rootDir, 'android/app')
+
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File(rootDir, 'android/capacitor-cordova-android-plugins')
+
+include ':capacitor-android'
+project(':capacitor-android').projectDir = new File(rootDir, 'node_modules/@capacitor/android/capacitor')
+
+include ':capacitor-app'
+project(':capacitor-app').projectDir = new File(rootDir, 'node_modules/@capacitor/app/android')
+
+include ':capacitor-app-launcher'
+project(':capacitor-app-launcher').projectDir = new File(rootDir, 'node_modules/@capacitor/app-launcher/android')
+
+include ':capacitor-filesystem'
+project(':capacitor-filesystem').projectDir = new File(rootDir, 'node_modules/@capacitor/filesystem/android')
+
+include ':capacitor-haptics'
+project(':capacitor-haptics').projectDir = new File(rootDir, 'node_modules/@capacitor/haptics/android')
+
+include ':capacitor-network'
+project(':capacitor-network').projectDir = new File(rootDir, 'node_modules/@capacitor/network/android')
+
+include ':capacitor-preferences'
+project(':capacitor-preferences').projectDir = new File(rootDir, 'node_modules/@capacitor/preferences/android')
+
+include ':capacitor-share'
+project(':capacitor-share').projectDir = new File(rootDir, 'node_modules/@capacitor/share/android')
+
+include ':capacitor-status-bar'
+project(':capacitor-status-bar').projectDir = new File(rootDir, 'node_modules/@capacitor/status-bar/android')

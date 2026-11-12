@@ -56,13 +56,13 @@ Search 13 onion search engines through Tor with dedup, entity extraction, snippe
 ```typescript
 ghost_search({
   query: "security tools",
-  engines: ["ahmia", "tor66", "notevil"],  // optional, default: all healthy
-  paranoid: false,          // surge shaping + idle decoys
-  snippetFilter: true,      // liability snippet replacement
-  maxResults: 20,           // cap results
-  refineQuery: false,       // NIM query refinement
-  summarize: false          // NIM result summary
-})
+  engines: ["ahmia", "tor66", "notevil"], // optional, default: all healthy
+  paranoid: false, // surge shaping + idle decoys
+  snippetFilter: true, // liability snippet replacement
+  maxResults: 20, // cap results
+  refineQuery: false, // NIM query refinement
+  summarize: false, // NIM result summary
+});
 ```
 
 ### ghost_health

@@ -102,12 +102,9 @@ async function executeSearch(
   }
 
   const parsed = parseQuery(queryString);
-  const engineIds =
-    params.engines ?? ENGINES.map((e) => e.id).filter((id) => !isOpen(id));
+  const engineIds = params.engines ?? ENGINES.map((e) => e.id).filter((id) => !isOpen(id));
 
-  const camouflage = params.paranoid
-    ? paranoidCamouflage()
-    : standardCamouflage();
+  const camouflage = params.paranoid ? paranoidCamouflage() : standardCamouflage();
 
   const surge = params.paranoid ? paranoidSurge() : standardSurge();
 
@@ -171,10 +168,7 @@ async function executeSearch(
       const rawResults = engine.parse(body);
 
       for (const raw of rawResults) {
-        const { snippet, withheld } = safeSnippet(
-          raw.snippet ?? "",
-          params.snippetFilter,
-        );
+        const { snippet, withheld } = safeSnippet(raw.snippet ?? "", params.snippetFilter);
 
         const entities = extractEntities(`${raw.title} ${snippet}`);
 
@@ -249,7 +243,9 @@ function createServer(config: ServerConfig): McpServer {
         engines: z
           .array(z.string())
           .optional()
-          .describe("Specific engine IDs to use (default: all healthy engines). Use ghost_engines to list IDs."),
+          .describe(
+            "Specific engine IDs to use (default: all healthy engines). Use ghost_engines to list IDs.",
+          ),
         paranoid: z
           .boolean()
           .optional()
@@ -277,7 +273,9 @@ function createServer(config: ServerConfig): McpServer {
           .boolean()
           .optional()
           .default(false)
-          .describe("Use NIM LLM to generate a summary of the search results (requires NIM_API_KEY)"),
+          .describe(
+            "Use NIM LLM to generate a summary of the search results (requires NIM_API_KEY)",
+          ),
       }),
     },
     async (args) => {
@@ -322,13 +320,16 @@ function createServer(config: ServerConfig): McpServer {
       inputSchema: z.object({}),
     },
     async () => {
-      const health: Record<string, {
-        status: string;
-        open: boolean;
-        successes: number;
-        failures: number;
-        lastError: string | undefined;
-      }> = {};
+      const health: Record<
+        string,
+        {
+          status: string;
+          open: boolean;
+          successes: number;
+          failures: number;
+          lastError: string | undefined;
+        }
+      > = {};
       for (const engine of ENGINES) {
         const info = getHealth(engine.id);
         const err = lastError(engine.id);
@@ -344,11 +345,7 @@ function createServer(config: ServerConfig): McpServer {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              { engines: health, totalEngines: ENGINES.length },
-              null,
-              2,
-            ),
+            text: JSON.stringify({ engines: health, totalEngines: ENGINES.length }, null, 2),
           },
         ],
       };

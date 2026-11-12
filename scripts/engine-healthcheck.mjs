@@ -214,8 +214,7 @@ async function probeOne(e) {
   /* Onion-location discovery (report-only): engines that rotate often keep an
      announcement on the old page. Meta tag from the probe body is free; only
      for non-ok engines do we spend one extra header fetch on the homepage. */
-  let onionLocation =
-    code > 0 ? extractOnionLocation({ body, baseUrl: e.baseUrl }) : null;
+  let onionLocation = code > 0 ? extractOnionLocation({ body, baseUrl: e.baseUrl }) : null;
   if (!onionLocation && status !== "ok" && code > 0) {
     const home = await curl(`${e.baseUrl}/`, timeout, null, true);
     if (home.code >= 200 && home.code < 400) {

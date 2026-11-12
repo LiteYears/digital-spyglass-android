@@ -1,0 +1,21 @@
+{
+	"appId": "org.darknetcrawler.mobile",
+	"appName": "Ghost Search",
+	"webDir": "dist/client",
+	"loggingBehavior": "none",
+	"android": {
+		"allowMixedContent": false,
+		"captureInput": false,
+		"webContentsDebuggingEnabled": false
+	},
+	"plugins": {
+		"StatusBar": {
+			"style": "DARK",
+			"backgroundColor": "#0b0f14",
+			"overlaysWebView": true
+		}
+	},
+	"server": {
+		"androidScheme": "https"
+	}
+}

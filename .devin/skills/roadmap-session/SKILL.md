@@ -14,6 +14,7 @@ Read `AGENTS.md` (root) first for endpoints, troubleshooting, and current conven
 ### Step 2: Look Up Item Spec
 
 When implementing a specific item (e.g. V4-33):
+
 1. Search `docs/WORLDBASE_ROADMAP_V4.md` for the item heading (e.g. `## V4-33`)
 2. Read only that section — do not read the full 1815-line file
 3. The spec contains: description, key files, LOC estimate, dependencies, implementation notes
@@ -21,6 +22,7 @@ When implementing a specific item (e.g. V4-33):
 ### Step 3: Implement
 
 Follow WorldBase conventions:
+
 - Fail-soft: every feature degrades gracefully without GPU
 - Feature flags default OFF (e.g. `WORLDBASE_WHISPER=0`)
 - **Docker-First:** Stack runs via `docker compose up -d --build`, no venv backend
@@ -38,6 +40,7 @@ Follow WorldBase conventions:
 The intelshed MCP server provides 32 tools connected to the live system. Use them:
 
 **Pre-implementation (understand current state):**
+
 - `worldbase_health` — check system is alive before starting
 - `worldbase_feed_status` — check which feeds are fresh/stale before touching feed code
 - `worldbase_agent_status` — check orchestrator/blackboard state before touching agent code
@@ -48,12 +51,14 @@ The intelshed MCP server provides 32 tools connected to the live system. Use the
 - `worldbase_feed_sample` — inspect actual feed data shape before writing parsers
 
 **During implementation (validate as you go):**
+
 - `worldbase_chat` — test chat/RAG changes by sending a query and checking response
 - `worldbase_orchestrate` — test orchestrator changes by running a query through the 5-agent pipeline
 - `worldbase_globe_toggle_layer` / `worldbase_globe_layers` — test layer changes live
 - `worldbase_extract_iocs` — test IOC extraction on sample text
 
 **Post-implementation (verify before commit):**
+
 - `worldbase_health` — confirm system still alive after changes
 - `worldbase_feed_status` — confirm no feeds broke
 - `worldbase_agent_status` — confirm agent state sane
@@ -61,14 +66,17 @@ The intelshed MCP server provides 32 tools connected to the live system. Use the
 - `dev_tools_mcp` `analyze_code_quality` — check complexity/style of new code
 
 **When working with new libraries:**
+
 - `MCP_DOCKER` `resolve-library-id` + `get-library-docs` — fetch current API docs instead of guessing
 
 **When context needs to survive sessions:**
+
 - `memory` `create_memory` — save key decisions, gotchas, patterns for next instance
 
 ### Step 4: Update Status
 
 After completing an item:
+
 1. Update `docs/WORLDBASE_ROADMAP_V4.md` — mark item heading as `[SHIPPED]`
 2. Log session in `progress.txt` with files changed and test results
 3. `git add` only code + tests, no roadmap/progress files
@@ -89,13 +97,13 @@ After completing an item:
 
 ### File Roles
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `AGENTS.md` | root | **Read first every session.** Endpoints, troubleshooting, conventions |
-| `docs/WORLDBASE_ROADMAP_V4.md` | ~1850 | Item specs only (V4-01 to V4-71) — search by heading, read one section |
-| `docs/STACK_INVENTORY_2026-07.md` | ~1275 | Live-verified technical inventory, module list, technique assessments |
-| `docs/LLM_OPERATIONS_AGENT_BEST_PRACTICES_2026.md` | ~540 | Operations Agent design, safety model, rollout plan |
-| `progress.txt` | growing | Session log — read last 20 lines for current stand |
-| `.devin/workflows/next-instance.md` | ~87 | Concrete next-task assignment — read if starting fresh |
-| `docs/WORLDBASE_ROADMAP_OPEN.md` | ~70 | **DEPRECATED** — status drifted, do not use |
-| `docs/WORLDBASE_SESSION_PLAN.md` | ~990 | **ARCHIVED** — German, status drifted, historical reference only |
+| File                                               | Lines   | Purpose                                                                |
+| -------------------------------------------------- | ------- | ---------------------------------------------------------------------- |
+| `AGENTS.md`                                        | root    | **Read first every session.** Endpoints, troubleshooting, conventions  |
+| `docs/WORLDBASE_ROADMAP_V4.md`                     | ~1850   | Item specs only (V4-01 to V4-71) — search by heading, read one section |
+| `docs/STACK_INVENTORY_2026-07.md`                  | ~1275   | Live-verified technical inventory, module list, technique assessments  |
+| `docs/LLM_OPERATIONS_AGENT_BEST_PRACTICES_2026.md` | ~540    | Operations Agent design, safety model, rollout plan                    |
+| `progress.txt`                                     | growing | Session log — read last 20 lines for current stand                     |
+| `.devin/workflows/next-instance.md`                | ~87     | Concrete next-task assignment — read if starting fresh                 |
+| `docs/WORLDBASE_ROADMAP_OPEN.md`                   | ~70     | **DEPRECATED** — status drifted, do not use                            |
+| `docs/WORLDBASE_SESSION_PLAN.md`                   | ~990    | **ARCHIVED** — German, status drifted, historical reference only       |

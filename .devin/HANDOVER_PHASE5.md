@@ -54,15 +54,16 @@ briefing for the next agent session. Also stored in SuperMemory for `affect_cont
 
 ## 4. Current Branch State
 
-| Branch | Commit | Pushed | Purpose |
-|--------|--------|--------|---------|
-| `main` | `c62cc52` | Yes (GitHub) | Released code, F-Droid MR based on this |
-| `phase5-camouflage` | `0a4ad92` | **No (local only)** | Phase 5 Camouflage Layer |
+| Branch              | Commit    | Pushed              | Purpose                                 |
+| ------------------- | --------- | ------------------- | --------------------------------------- |
+| `main`              | `c62cc52` | Yes (GitHub)        | Released code, F-Droid MR based on this |
+| `phase5-camouflage` | `0a4ad92` | **No (local only)** | Phase 5 Camouflage Layer                |
 
 **CRITICAL:** Do NOT merge `phase5-camouflage` to main, do NOT push it, do NOT create
 a `v2.0.0` tag until F-Droid v1.0.0 acceptance is confirmed via authoritative GitLab API check.
 
 ### Working tree (uncommitted, intentional):
+
 - `metadata/org.darknetcrawler.mobile.yml` — F-Droid forky fix (local copy)
 - `.devin/` — local Devin configuration (untracked, gitignored)
 - `docs/GHOST_V2_PLAN.md` — private plan (gitignored)
@@ -85,11 +86,13 @@ a `v2.0.0` tag until F-Droid v1.0.0 acceptance is confirmed via authoritative Gi
 - **No new maintainer response** since then — still waiting for review.
 
 ### GitLab PAT location
+
 `C:\Users\sooko\AppData\Roaming\devin\mcp_config.json`
 Field: `mcpServers.gitlab.env.GITLAB_PERSONAL_ACCESS_TOKEN`
 Use for REST API calls. **Never commit this token.**
 
 ### How to check MR status
+
 ```powershell
 $pat = (Get-Content "$env:APPDATA\devin\mcp_config.json" -Raw | ConvertFrom-Json)."mcpServers".gitlab.env.GITLAB_PERSONAL_ACCESS_TOKEN
 $headers = @{ "PRIVATE-TOKEN" = $pat }
@@ -100,6 +103,7 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 ## 6. Privacy Architecture
 
 ### Transport
+
 - `.onion` requests → PianoTorHttpPlugin.java → raw `java.net.Socket` → Orbot SOCKS5
 - `.onion` hostnames passed as SOCKS5 DOMAINNAME (Tor does DNS, no system DNS)
 - Plain HTTP over `.onion` (no TLS) — Tor provides E2E encryption, no JA3 fingerprint
@@ -108,6 +112,7 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 - HTTP/1.1 with `Connection: close`, no Referer, no custom headers
 
 ### Circuit Isolation
+
 - Each search generates `crypto.randomUUID()` as SOCKS5 password (user=`ghost`)
 - Tor's `IsolateSOCKSAuth` gives each unique credential pair a separate circuit
 - All engines in one search share the same circuit (intentional)
@@ -115,11 +120,13 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 - Circuit breakers reset for open engines at start of each new search
 
 ### Cookies
+
 - Per-host cookie jar in PianoTorHttpPlugin.java
 - Purged after every search via `purgeTorCookies()` bridge call
 - OSS/Torgle captcha cookies preserved within a single search, purged after
 
 ### Anti-Forensics
+
 - `FLAG_SECURE` — blocks screenshots and recents thumbnails
 - `setHideOverlayWindows()` (Android 12+) — tapjacking protection
 - `onSaveInstanceState()` clears Bundle — no Android state restoration
@@ -132,6 +139,7 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 ## 7. Phase 5 Camouflage Layer (current work)
 
 ### Research basis (SOTA 2023-2026)
+
 - **FRONT** (arXiv 2510.11804): 86%→1.6% detection accuracy with Rayleigh padding
 - **RegulaTor** (USENIX Security 2023): beats DNN attacks at <10% time overhead
 - **Tamaraw** (NDSS 2026): constant-rate, very strong but prohibitively expensive
@@ -139,6 +147,7 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 - **Honest truth:** no padding-only defense reaches 0% detection. We reduce but do NOT eliminate.
 
 ### Implementation (`src/lib/ghost/camouflage.ts`)
+
 - `sampleRayleigh(sigma)` — inverse CDF sampling
 - `sampleExponential(lambda)` — inverse CDF sampling
 - `shuffle(arr)` — Fisher-Yates
@@ -153,12 +162,14 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 - `DECOY_TARGETS` — 4 .onion homepages (Ahmia, Torch, Tor66, OSS)
 
 ### Integration points
+
 - `search.ts`: engines shuffled, Rayleigh/surge delays applied, decoys fired in parallel
 - `ghost-context.tsx`: idle scheduler starts/stops with paranoidMode, screen-off, purge
 - `security.tsx`: toggle in "policy" panel
 - `types.ts`: `paranoidMode: boolean` in GhostSettings (default: false)
 
 ### Device verification results (2026-08-21)
+
 - Standard: 17 requests in 478ms (single burst with Rayleigh spread)
 - Paranoid: 16 requests in 2981ms (2 surges + 1.5s pause + 6 decoys)
 - Idle decoys: 4 requests in 70s (exponential intervals ~4s, ~16s)
@@ -166,22 +177,22 @@ Write-Output "State: $($mr.state), Labels: $($mr.labels -join ', ')"
 
 ## 8. Current Engines (14)
 
-| # | Engine | Trust | Special |
-|---|--------|-------|---------|
-| 1 | Ahmia | 3 | Anti-bot token, prepareSearchUrl |
-| 2 | Torch | 2 | |
-| 3 | TorDex | 2 | |
-| 4 | Tor66 | 1 | prepareSearchUrl form extraction |
-| 5 | OnionLand | 1 | |
-| 6 | Excavator | 1 | |
-| 7 | Amnesia | 1 | |
-| 8 | DeepSearches | 1 | |
-| 9 | Torland | 1 | |
-| 10 | Onionway | 1 | |
-| 11 | OSS | 1 | Math captcha POST flow |
-| 12 | Torgol | 1 | |
-| 13 | Not Evil | 2 | |
-| 14 | Torgle | 1 | Math captcha POST flow |
+| #   | Engine       | Trust | Special                          |
+| --- | ------------ | ----- | -------------------------------- |
+| 1   | Ahmia        | 3     | Anti-bot token, prepareSearchUrl |
+| 2   | Torch        | 2     |                                  |
+| 3   | TorDex       | 2     |                                  |
+| 4   | Tor66        | 1     | prepareSearchUrl form extraction |
+| 5   | OnionLand    | 1     |                                  |
+| 6   | Excavator    | 1     |                                  |
+| 7   | Amnesia      | 1     |                                  |
+| 8   | DeepSearches | 1     |                                  |
+| 9   | Torland      | 1     |                                  |
+| 10  | Onionway     | 1     |                                  |
+| 11  | OSS          | 1     | Math captcha POST flow           |
+| 12  | Torgol       | 1     |                                  |
+| 13  | Not Evil     | 2     |                                  |
+| 14  | Torgle       | 1     | Math captcha POST flow           |
 
 Removed: Haystak (prolonged offline), FindTor (persistent timeout)
 
@@ -192,6 +203,7 @@ Removed: Haystak (prolonged offline), FindTor (persistent timeout)
 - **Orbot must be in VPN mode** before testing searches
 
 ### Build + install sequence
+
 ```powershell
 bun run build:mobile
 bunx cap sync android
@@ -203,6 +215,7 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 ```
 
 ### Verification commands
+
 ```powershell
 bunx tsc --noEmit                                    # Typecheck
 bunx prettier --check "src/**/*.{ts,tsx}"            # Prettier check
@@ -236,10 +249,12 @@ bun run build:mobile                                 # Mobile build
 ## 12. Next Steps (Prioritized)
 
 ### IMMEDIATE (wait for external event)
+
 1. Monitor F-Droid MR !46224 for maintainer response
 2. Do NOT merge/push/tag until F-Droid accepts v1.0.0
 
 ### AFTER F-DROID v1.0.0 ACCEPTANCE
+
 3. Merge `phase5-camouflage` → `main`
 4. Tag `v2.0.0` on main
 5. Build signed release APK with checksum
@@ -247,11 +262,13 @@ bun run build:mobile                                 # Mobile build
 7. Update F-Droid metadata if needed
 
 ### QUALITY ASSURANCE (can do now, on phase5-camouflage)
+
 8. ~~Write unit tests for query parser, entity regex, dedup, camouflage distributions~~ **DONE (Session 2, 2026-08-21): 142 tests, all passing**
 9. Explicitly device-test idle decoy screen-off/on lifecycle
 10. Verify Not Evil and Torgle parser selectors against real HTML (engines return 200 with 21KB/14KB — need UI check for hits > 0)
 
 ### FUTURE ENHANCEMENTS (post-v2.0.0)
+
 11. P5-4: Stream multiplexing
 12. Tor Control Port integration (NEWNYM, direct circuit control)
 13. VerifyTor improvement (check exit IP)
@@ -262,36 +279,36 @@ bun run build:mobile                                 # Mobile build
 
 ## 13. Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/lib/ghost/camouflage.ts` | NEW — traffic-analysis defense layer |
-| `src/lib/ghost/search.ts` | Search orchestrator with camouflage scheduler |
-| `src/lib/ghost/engines.ts` | 14 engine definitions with parsers |
-| `src/lib/ghost/http.ts` | fetchText/fetchBodyOnly/fetchPostBody, verifyTor |
-| `src/lib/ghost/types.ts` | GhostSettings (includes paranoidMode), ResultRow |
-| `src/lib/ghost/breaker.ts` | Circuit breaker + health metrics |
-| `src/lib/ghost/entities.ts` | ReDoS-safe entity extraction |
-| `src/lib/ghost/query.ts` | Query parser (AND/OR/NOT/phrases) |
-| `src/lib/ghost/highlight.ts` | Query term highlighting |
-| `src/lib/ghost/escape.ts` | HTML/regex escaping |
-| `src/lib/ghost/parse.ts` | CSS selector parsing, isOnion, looksLikeCaptcha |
-| `src/lib/ghost/snippets.ts` | Snippet filter (liability control) |
-| `src/lib/platform/bridge.ts` | Capacitor bridge (torFetch, purgeTorCookies) |
-| `src/lib/store/ghost-context.tsx` | Session state, purge, idle decoy scheduler |
-| `src/lib/store/ghost-settings.ts` | Persisted preferences + paranoidMode |
-| `src/routes/index.tsx` | Main search screen |
-| `src/routes/security.tsx` | Security posture, engine health, policy toggles |
-| `android/.../PianoTorHttpPlugin.java` | Tor SOCKS5 plugin |
-| `android/.../MainActivity.java` | FLAG_SECURE, overlay protection |
-| `android/app/proguard-rules.pro` | Log stripping rules |
-| `metadata/org.darknetcrawler.mobile.yml` | F-Droid build metadata (local forky mod) |
-| `docs/GHOST_V2_PLAN.md` | PRIVATE plan (gitignored) |
-| `docs/SITD_Theory_Overview_Revised.md` | PRIVATE theory (gitignored) |
+| File                                         | Purpose                                                           |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| `src/lib/ghost/camouflage.ts`                | NEW — traffic-analysis defense layer                              |
+| `src/lib/ghost/search.ts`                    | Search orchestrator with camouflage scheduler                     |
+| `src/lib/ghost/engines.ts`                   | 14 engine definitions with parsers                                |
+| `src/lib/ghost/http.ts`                      | fetchText/fetchBodyOnly/fetchPostBody, verifyTor                  |
+| `src/lib/ghost/types.ts`                     | GhostSettings (includes paranoidMode), ResultRow                  |
+| `src/lib/ghost/breaker.ts`                   | Circuit breaker + health metrics                                  |
+| `src/lib/ghost/entities.ts`                  | ReDoS-safe entity extraction                                      |
+| `src/lib/ghost/query.ts`                     | Query parser (AND/OR/NOT/phrases)                                 |
+| `src/lib/ghost/highlight.ts`                 | Query term highlighting                                           |
+| `src/lib/ghost/escape.ts`                    | HTML/regex escaping                                               |
+| `src/lib/ghost/parse.ts`                     | CSS selector parsing, isOnion, looksLikeCaptcha                   |
+| `src/lib/ghost/snippets.ts`                  | Snippet filter (liability control)                                |
+| `src/lib/platform/bridge.ts`                 | Capacitor bridge (torFetch, purgeTorCookies)                      |
+| `src/lib/store/ghost-context.tsx`            | Session state, purge, idle decoy scheduler                        |
+| `src/lib/store/ghost-settings.ts`            | Persisted preferences + paranoidMode                              |
+| `src/routes/index.tsx`                       | Main search screen                                                |
+| `src/routes/security.tsx`                    | Security posture, engine health, policy toggles                   |
+| `android/.../PianoTorHttpPlugin.java`        | Tor SOCKS5 plugin                                                 |
+| `android/.../MainActivity.java`              | FLAG_SECURE, overlay protection                                   |
+| `android/app/proguard-rules.pro`             | Log stripping rules                                               |
+| `metadata/org.darknetcrawler.mobile.yml`     | F-Droid build metadata (local forky mod)                          |
+| `docs/GHOST_V2_PLAN.md`                      | PRIVATE plan (gitignored)                                         |
+| `docs/SITD_Theory_Overview_Revised.md`       | PRIVATE theory (gitignored)                                       |
 | `src/lib/ghost/__tests__/camouflage.test.ts` | NEW — 40 tests: Rayleigh/Exponential stats, shuffle, surge delays |
-| `src/lib/ghost/__tests__/entities.test.ts` | NEW — 24 tests: entity detection + ReDoS safety |
-| `src/lib/ghost/__tests__/query.test.ts` | NEW — 34 tests: query parser |
-| `src/lib/ghost/__tests__/dedup.test.ts` | NEW — 44 tests: dedup, aggregate, flagScams, filterAndSort |
-| `vitest.config.ts` | NEW — vitest configuration (node env, tsconfig paths) |
+| `src/lib/ghost/__tests__/entities.test.ts`   | NEW — 24 tests: entity detection + ReDoS safety                   |
+| `src/lib/ghost/__tests__/query.test.ts`      | NEW — 34 tests: query parser                                      |
+| `src/lib/ghost/__tests__/dedup.test.ts`      | NEW — 44 tests: dedup, aggregate, flagScams, filterAndSort        |
+| `vitest.config.ts`                           | NEW — vitest configuration (node env, tsconfig paths)             |
 
 ## 14. Operator Preferences
 

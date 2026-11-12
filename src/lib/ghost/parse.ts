@@ -42,6 +42,7 @@ export function parseDocument(html: string): Document | null {
     }
   }
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { parseHTML } = require("linkedom");
     const { document } = parseHTML(html);
     return document as unknown as Document;

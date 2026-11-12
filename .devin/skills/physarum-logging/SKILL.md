@@ -12,52 +12,58 @@ The `physarum-learning` MCP server tracks operator affective state, CLI behavior
 
 ## Automated logging via hooks (`.devin/hooks.v1.json`)
 
-| Hook | Event | What it does | Agent action needed? |
-|------|-------|-------------|---------------------|
-| `user_prompt_submit.py` | `UserPromptSubmit` | Auto-records operator text to physarum CLI + injects "remember to log" reminder | No — operator text is auto-logged |
-| `stop_guard.py` | `Stop` | Injects end-of-session ritual reminder | Agent should complete ritual before stopping |
-| `post_exec_log.py` | `PostToolUse(exec)` | Logs exec command outcomes to exec_log.jsonl + physarum | No — auto-logged |
-| `post_edit_lint.py` | `PostToolUse(edit/write)` | Runs eslint on edited .ts/.tsx files, injects errors as context | No — auto-linted |
-| `pre_exec_guard.py` | `PreToolUse(exec)` | Blocks PowerShell anti-patterns + queries physarum for past lessons | No — auto-guarded |
+| Hook                    | Event                     | What it does                                                                    | Agent action needed?                         |
+| ----------------------- | ------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
+| `user_prompt_submit.py` | `UserPromptSubmit`        | Auto-records operator text to physarum CLI + injects "remember to log" reminder | No — operator text is auto-logged            |
+| `stop_guard.py`         | `Stop`                    | Injects end-of-session ritual reminder                                          | Agent should complete ritual before stopping |
+| `post_exec_log.py`      | `PostToolUse(exec)`       | Logs exec command outcomes to exec_log.jsonl + physarum                         | No — auto-logged                             |
+| `post_edit_lint.py`     | `PostToolUse(edit/write)` | Runs eslint on edited .ts/.tsx files, injects errors as context                 | No — auto-linted                             |
+| `pre_exec_guard.py`     | `PreToolUse(exec)`        | Blocks PowerShell anti-patterns + queries physarum for past lessons             | No — auto-guarded                            |
 
 ## What is auto vs manual
 
-| Data | Auto (hook) | Manual (agent) |
-|------|------------|----------------|
-| Operator text (every prompt) | `user_prompt_submit.py` | — |
-| Exec command outcomes | `post_exec_log.py` | — |
-| ESLint errors on edit | `post_edit_lint.py` | — |
-| CLI proxy metrics | — | `affect_record(query="CLI proxy", ...)` every 15-30 min |
-| LLM output | — | `affect_record(query="LLM responded with: ...", ...)` after each LLM call |
-| Feedback (strategy change) | — | `affect_record(query="feedback", ...)` |
-| EMA (operator self-report) | — | `ask_user_question` + `affect_record(query="record EMA", ...)` |
-| Rubric (session quality) | — | `ask_user_question` + `affect_record(query="record rubric", ...)` |
-| Session report | — | `affect_session(query="session report")` + SuperMemory + Memory MCP + progress.txt |
+| Data                         | Auto (hook)             | Manual (agent)                                                                     |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| Operator text (every prompt) | `user_prompt_submit.py` | —                                                                                  |
+| Exec command outcomes        | `post_exec_log.py`      | —                                                                                  |
+| ESLint errors on edit        | `post_edit_lint.py`     | —                                                                                  |
+| CLI proxy metrics            | —                       | `affect_record(query="CLI proxy", ...)` every 15-30 min                            |
+| LLM output                   | —                       | `affect_record(query="LLM responded with: ...", ...)` after each LLM call          |
+| Feedback (strategy change)   | —                       | `affect_record(query="feedback", ...)`                                             |
+| EMA (operator self-report)   | —                       | `ask_user_question` + `affect_record(query="record EMA", ...)`                     |
+| Rubric (session quality)     | —                       | `ask_user_question` + `affect_record(query="record rubric", ...)`                  |
+| Session report               | —                       | `affect_session(query="session report")` + SuperMemory + Memory MCP + progress.txt |
 
 ## During the session
 
 **Record EMA** (operator self-report, 1-5 scale each):
+
 ```
 affect_record(query="record EMA", valence=5, focus=5, frustration=1, fatigue=1, trust=5, source="operator_self_report")
 ```
+
 Fields: `valence`, `arousal`, `dominance`, `focus`, `frustration`, `fatigue`, `trust` (all 1-5 int).
 
 **Record rubric** (session quality, 1-5 scale each):
+
 ```
 affect_record(query="record rubric", task_completion=5, operator_satisfaction=5, groundedness=5, conversation_coherence=5)
 ```
 
 **Record CLI proxy** (agent behavior metrics):
+
 ```
 affect_record(query="CLI proxy", tool_call_density_per_min=8, time_since_success_s=30, error_rate=0.0, retry_burst_count=0, session_length_min=45)
 ```
 
 **Record LLM output** (per LLM call):
+
 ```
 affect_record(query="LLM responded with: ...", text="the response", tool_calls=["read","exec"], outcome=true)
 ```
 
 **Record feedback** (after strategy changes):
+
 ```
 affect_record(query="feedback", trigger_emotion="frustrated", strategy="brief", reward=0.8, outcome="positive")
 ```
@@ -182,11 +188,13 @@ affect_record(query="record EMA", valence=<answer>, focus=<answer>, frustration=
 ```
 affect_session(query="session report")
 ```
+
 Returns: Bayesian trajectory, temporal regime (SSM: flow/calm/turbulent), CLI history, feedback summary, LLM agent state, calibration pack, shadow policy recommendation.
 
 ### Step 5: Log to progress.txt + SuperMemory + Memory MCP
 
 **Log to progress.txt** (one-liner, append):
+
 ```
 Physarum: SuperMemory session report + Memory MCP N entities + N relations.
 EMA: V=5, A=4, D=5, Focus=5, Frustration=1, Fatigue=2, Trust=5. Rubric: 5/5/5/5. SSM: flow.
@@ -210,11 +218,11 @@ affect_memory(query="recall: debugging a database issue", text="debugging a data
 
 ## When to log
 
-| Event | Tool | Frequency |
-|-------|------|-----------|
-| Operator reports mood | `affect_record` EMA | When operator shares state |
-| Session quality check | `affect_record` rubric | Mid-session + end |
-| LLM call completes | `affect_record` LLM | Every LLM call |
-| CLI behavior changes | `affect_record` CLI | Every 15-30 min |
-| Strategy change | `affect_record` feedback | After adapting approach |
-| Session end | `affect_session` report + `progress.txt` + SuperMemory + Memory MCP | Always |
+| Event                 | Tool                                                                | Frequency                  |
+| --------------------- | ------------------------------------------------------------------- | -------------------------- |
+| Operator reports mood | `affect_record` EMA                                                 | When operator shares state |
+| Session quality check | `affect_record` rubric                                              | Mid-session + end          |
+| LLM call completes    | `affect_record` LLM                                                 | Every LLM call             |
+| CLI behavior changes  | `affect_record` CLI                                                 | Every 15-30 min            |
+| Strategy change       | `affect_record` feedback                                            | After adapting approach    |
+| Session end           | `affect_session` report + `progress.txt` + SuperMemory + Memory MCP | Always                     |

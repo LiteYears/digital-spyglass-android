@@ -1,0 +1,6 @@
+{
+  "name": "Ghost Search",
+  "description": "Stateless, RAM-only onion search aggregator with parallel multi-engine queries, entity extraction, and investigator workbench.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

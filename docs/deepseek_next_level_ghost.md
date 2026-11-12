@@ -6,13 +6,13 @@ A previous assessment placed Ghost at **Level 2 (Security-Aware)** on a 0–4 ma
 
 ## 2. The Maturity Model
 
-| Level | Name | Core Criterion |
-| :--- | :--- | :--- |
-| 0 | Prototype | Runs on a dev device |
-| 1 | Solid Hobby App | Clean code, README |
-| 2 | Security-Aware | Threat model, defense-in-depth, audit trail, tests for critical paths |
-| **3** | **Audit-Ready** | **Reproducible builds, coverage gates, independent review, documented residual risks, field-tested** |
-| 4 | Production-Grade Privacy | External pen-tests, incident response, long-term maintenance, formal verification |
+| Level | Name                     | Core Criterion                                                                                       |
+| :---- | :----------------------- | :--------------------------------------------------------------------------------------------------- |
+| 0     | Prototype                | Runs on a dev device                                                                                 |
+| 1     | Solid Hobby App          | Clean code, README                                                                                   |
+| 2     | Security-Aware           | Threat model, defense-in-depth, audit trail, tests for critical paths                                |
+| **3** | **Audit-Ready**          | **Reproducible builds, coverage gates, independent review, documented residual risks, field-tested** |
+| 4     | Production-Grade Privacy | External pen-tests, incident response, long-term maintenance, formal verification                    |
 
 Ghost currently sits at **Level 2**. The gap to Level 3 is not architectural—it is **evidentiary**.
 
@@ -90,16 +90,16 @@ Ghost currently sits at **Level 2**. The gap to Level 3 is not architectural—i
 
 ## 4. Tooling Reference
 
-| Tool | Purpose | Source |
-| :--- | :--- | :--- |
-| OWASP MASVS / MASTG | Control framework and testing guide | [reference:19][reference:20] |
-| MobSF | Automated static + dynamic Android analysis | [reference:21] |
-| Frida / objection | Runtime instrumentation, pinning bypass | [reference:22] |
-| jadx | APK decompilation | [reference:23] |
-| apksigcopier | Reproducible-build signature verification | [reference:24] |
-| OpenSSF Scorecard | Repository security-health diagnostics | [reference:25] |
-| OnionScan / onionscout | Onion-service OPSEC auditing | [reference:26] |
-| SAST/SCA/DAST CI gates | Release-blocking automation | [reference:27] |
+| Tool                   | Purpose                                     | Source                       |
+| :--------------------- | :------------------------------------------ | :--------------------------- |
+| OWASP MASVS / MASTG    | Control framework and testing guide         | [reference:19][reference:20] |
+| MobSF                  | Automated static + dynamic Android analysis | [reference:21]               |
+| Frida / objection      | Runtime instrumentation, pinning bypass     | [reference:22]               |
+| jadx                   | APK decompilation                           | [reference:23]               |
+| apksigcopier           | Reproducible-build signature verification   | [reference:24]               |
+| OpenSSF Scorecard      | Repository security-health diagnostics      | [reference:25]               |
+| OnionScan / onionscout | Onion-service OPSEC auditing                | [reference:26]               |
+| SAST/SCA/DAST CI gates | Release-blocking automation                 | [reference:27]               |
 
 ## 5. Metrics That Matter
 

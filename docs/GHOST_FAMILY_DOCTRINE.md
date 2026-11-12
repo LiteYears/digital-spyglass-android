@@ -6,6 +6,7 @@ the Vault concept is FROZEN and describes what was built; this document
 describes where the family goes.
 
 **Documents in scope:**
+
 - `GHOST_VAULT_CONCEPT.md` — Vault concept (frozen, v1 shipped)
 - `GHOST_VAULT_IMPLEMENTATION.md` — Vault build spec (as-built)
 - `GHOST_WATCH_ENVELOPE_V1.md` — Watch work-set format spec (draft)
@@ -24,14 +25,14 @@ security floor (invariant), plus a bounded convenience budget.
 
 _Status column last-verified: 2026-10-30._
 
-| Node | Element | Status | Capability envelope | Must NEVER |
-|---|---|---|---|---|
-| discover | **Ghost** | shipped (F-Droid) | Tor-routed onion search, RAM session, purge triggers | persist anything |
-| read | Tor Browser | external | renders, hands off via share-intent | — (not ours) |
-| keep | **Vault** | shipped v1 2026-10-30 | encrypted store, share-intent sink, SAF import/export, biometric opt-in | transmit (no INTERNET) |
-| monitor | **Watch** | built + device-verified (release pending) | Tor-only outbound checks of a metadata-only work set `(url, addedAt)`; notifications as output | persist its own database; receive `title`/`note`/`tags`; touch clearnet |
-| submit | *(unnamed)* | placeholder | user-initiated encrypted hand-off (`secure-export-v1` envelopes, SAF) | act without explicit user gesture |
-| entry | **Console** *(optional)* | allowed, undesigned | stateless launch tray + unified panic affordance | hold family state (doctrine §4) |
+| Node     | Element                  | Status                                    | Capability envelope                                                                            | Must NEVER                                                              |
+| -------- | ------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| discover | **Ghost**                | shipped (F-Droid)                         | Tor-routed onion search, RAM session, purge triggers                                           | persist anything                                                        |
+| read     | Tor Browser              | external                                  | renders, hands off via share-intent                                                            | — (not ours)                                                            |
+| keep     | **Vault**                | shipped v1 2026-10-30                     | encrypted store, share-intent sink, SAF import/export, biometric opt-in                        | transmit (no INTERNET)                                                  |
+| monitor  | **Watch**                | built + device-verified (release pending) | Tor-only outbound checks of a metadata-only work set `(url, addedAt)`; notifications as output | persist its own database; receive `title`/`note`/`tags`; touch clearnet |
+| submit   | _(unnamed)_              | placeholder                               | user-initiated encrypted hand-off (`secure-export-v1` envelopes, SAF)                          | act without explicit user gesture                                       |
+| entry    | **Console** _(optional)_ | allowed, undesigned                       | stateless launch tray + unified panic affordance                                               | hold family state (doctrine §4)                                         |
 
 **Element boundaries — the load-bearing rules:**
 
@@ -40,11 +41,11 @@ _Status column last-verified: 2026-10-30._
   forgets. If a later stage adds remembered monitor state, it lives as
   metadata on Vault items (e.g. `lastChecked`, `contentHash`) written back
   through the same narrow import path — never a parallel database.
-  *(v1 is R1 with one named exception, decided 2026-10-30: two
+  _(v1 is R1 with one named exception, decided 2026-10-30: two
   timestamps (`lastAttemptAt`, `lastSuccessfulCheck`) plus one
   findings-bit (`badgePending`) persist as UI-honesty artifacts;
   `lastSummary` is memory-only — no monitor semantics at rest.
-  Anything beyond that subset stays later-stage-only.)*
+  Anything beyond that subset stays later-stage-only.)_
 - **Watch ↔ Vault exchange channel — decided structure (posture ladder).**
   The question decomposes into three axes: read path (Vault→Watch),
   write-back path (Watch→Vault), and the data subset that moves at all.
@@ -53,10 +54,10 @@ _Status column last-verified: 2026-10-30._
   persistence; Vault: persistence without net), so every byte it receives
   is exfiltration surface if a Watch build is ever compromised.
   **Data-minimal at the source beats transport hardening.** Fixed rule:
-  *"Watch receives only `(url, addedAt)`. Notes, titles and tags never
+  _"Watch receives only `(url, addedAt)`. Notes, titles and tags never
   leave Vault toward Watch — not as a design shortcut, but because Watch
   is the only node holding both network and Vault data, and every
-  additional field widens the exfiltration surface."* Watch work moves in
+  additional field widens the exfiltration surface."_ Watch work moves in
   a dedicated `reminder-list-v1` envelope with its own passphrase (separate
   from the Vault passphrase) — format spec: `GHOST_WATCH_ENVELOPE_V1.md`.
   - **Stage 0 — default (secure-by-default):** manual SAF export of the
@@ -85,7 +86,7 @@ _Status column last-verified: 2026-10-30._
     or documented acceptance, since spam degrades the Watch service only,
     never the store.
   - **Killed options:** signature-level permission / exported provider —
-    `protectionLevel="signature"` requires the *same* signing key on both
+    `protectionLevel="signature"` requires the _same_ signing key on both
     APKs, i.e. the exact family fingerprint §Naming forbids (checkable
     via `apksigner --print-certs`). `sharedUserId` rejected for the same
     reason. Clipboard transport rejected (history leak). Any variant
@@ -105,7 +106,7 @@ _Status column last-verified: 2026-10-30._
   a compromised Watch build can dial anywhere. Test gate for the concept:
   static audit (no `new Socket`/`openConnection` without the SOCKS
   proxy; no `InetAddress.getByName`; no `new InetSocketAddress(String,
-  int)` on remote targets — the constructor resolves implicitly,
+int)` on remote targets — the constructor resolves implicitly,
   `createUnresolved` only) plus a live device monitor proving all
   traffic binds `127.0.0.1:9050` during a check run.
 - **Every invariant carries an evidence type per observable layer.**
@@ -132,9 +133,9 @@ envelope format spec (single envelope, no chunking — partial salvage of a
 re-exportable metadata list is worthless) → Watch concept (bridge-node
 threat model; open questions: check semantics, notification-content leak,
 Tor-circuit observability, Stage-2 bind-spam mitigation; required explicit
-residual: *"a compromised Watch build can exfiltrate the exported work set
+residual: _"a compromised Watch build can exfiltrate the exported work set
 `(url, addedAt)` — bounded by design, not by code; Vault contents beyond
-that subset are structurally unreachable from Watch"*) → Watch v1 →
+that subset are structurally unreachable from Watch"_) → Watch v1 →
 (Console, optional, any time) → submit when a real hand-off case exists.
 Chunked envelopes (Vault v1.1 #5) concern the vault store only — Watch
 never reads `notes-store-v1` — and are opportunistic, not gating; same
@@ -186,7 +187,7 @@ balance claim needs revision.
 Named non-compliances to watch (labeled, but not bounded):
 
 - **Clipboard history — accepted.** Copy-to-clipboard is a convenience
-  feature whose cost is *unbounded*: OEM/system clipboard history
+  feature whose cost is _unbounded_: OEM/system clipboard history
   (Samsung, Gboard) persists the copied URL and no SDK API can remove
   it. Today it is labeled (warn + manual clear) — honest reading: it is
   a consciously unbounded leak, not merely a labeled one. Accepted
@@ -199,7 +200,7 @@ Named non-compliances to watch (labeled, but not bounded):
   derive is pure friction: identical strength is ~4× faster in native
   code, but Android ships **no** native PBKDF2 provider — native means a
   bundled `.so`/JNI, i.e. a real new supply-chain surface. Keeping pure-
-  Java BC is a *conservative supply-chain choice*, explicitly not a
+  Java BC is a _conservative supply-chain choice_, explicitly not a
   security gain; labeled accordingly and re-evaluated in v1.1. **If the
   native-dependency cost is ever paid, it buys Argon2id** (memory-hard —
   a real security gain, not just speed), not merely faster PBKDF2.

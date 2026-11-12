@@ -13,21 +13,11 @@ import {
   resetBreaker,
   undeprecate,
 } from "../breaker";
-import {
-  ENGINES,
-  engineById,
-  enginesForFastMode,
-  engineTier,
-} from "../engines";
+import { ENGINES, engineById, enginesForFastMode, engineTier } from "../engines";
 import { rankRowsV3, selectEngines } from "../search";
 import { resultsToCSV } from "../stix";
 import { assessSnippetQuality } from "../snippets";
-import {
-  clearBlacklistCache,
-  isBlacklisted,
-  loadAhmiaBlacklist,
-  md5Hex,
-} from "../blacklist";
+import { clearBlacklistCache, isBlacklisted, loadAhmiaBlacklist, md5Hex } from "../blacklist";
 
 describe("v3 engine tiers & contracts", () => {
   it("defines queryContract on all 13 engines", () => {

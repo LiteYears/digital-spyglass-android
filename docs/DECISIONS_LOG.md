@@ -33,15 +33,15 @@ family would observe and block literally nothing, for structural reasons:
 2. **Tor bypasses local DNS — but only via the unresolved-socket path.**
    The claim "Tor bypasses local DNS by design" holds only when remote
    addresses are constructed with `InetSocketAddress.createUnresolved(host,
-   port)` — the proxy receives the hostname and resolves remotely.
+port)` — the proxy receives the hostname and resolves remotely.
    **Correction (same day):** the first version of this entry called
    `new InetSocketAddress(String, int)` "the unresolved form". That was
-   a false positive: per JavaDoc that constructor *attempts* resolution
+   a false positive: per JavaDoc that constructor _attempts_ resolution
    internally (implicit `getByName`) and only flags the address
    unresolved on failure. Consequences found in `TorChecker`:
    `.onion` hosts emitted a doomed local DNS query on every connect
    (failed resolution still leaks the hostname); `www.torproject.org`
-   resolved *successfully* on every circuit probe — a real, working
+   resolved _successfully_ on every circuit probe — a real, working
    DNS leak of a Tor-related lookup. A grep for `getByName` could never
    find this; the leak lived inside the constructor. Fixed by switching
    all remote-target addresses to `createUnresolved` (proxy-side
@@ -82,7 +82,7 @@ project. Framing: the suite guards the darknet path; a sinkhole guards
 the home path.
 
 **And the inversion worth keeping:** a home sinkhole cannot protect the
-suite, but it *can detect suite bugs* — if Watch ever regresses to a
+suite, but it _can detect suite bugs_ — if Watch ever regresses to a
 resolved-socket path, an `.onion` hostname would appear in the sinkhole's
 DNS log. Not hypothetical: the regression existed today (see correction
 above) and a deployed sinkhole would have caught it before review did.
@@ -113,18 +113,18 @@ hand-rolled parser must define its own. Current bounds in `TorChecker`
 (verified 2026-10-30, `CONNECT_TIMEOUT_MS=15s`, `READ_TIMEOUT_MS=30s`,
 `MAX_BODY_BYTES=256 KiB`):
 
-| Case | Behavior |
-|---|---|
-| `content-length` 100 MB | body capped at 256 KiB — no OOM |
-| header missing / chunked | request speaks **HTTP/1.0** — chunked does not exist in 1.0, so the class is eliminated at the protocol level (device-verified: Ahmia `UP`/200 over 1.0). A spec-violating chunked reply still arrives as raw framing; a needle split across a chunk boundary can be missed — named residual |
-| `Content-Encoding` (gzip/br/deflate) | request advertises **no `Accept-Encoding`** — a compliant server cannot legally send compressed content; a violating one yields opaque bytes → signature FN. No decompressor by design: a capped gunzip would reintroduce a decompression-bomb surface that must itself be bounded |
-| UTF-16/other charsets | no `Accept-Charset` sent; non-ASCII-compatible bodies need an unusual explicit server config — named FN residual |
-| `content-length` semantics | **ignored entirely** — the parser stops trusting the declared length: body is read to `Connection: close` EOF or the 256 KiB cap, so a lying-small header can no longer hide a signature. The under-read FN was eliminated, not accepted (same-day fix, device-verified) |
-| header lies big (10 MB claimed, closes at 100 B) | reads to EOF — bounded |
-| malformed status line | `parseCode` fails soft → `code=0` → `DOWN_HTTP(0)` — fail-closed, no exception escape |
-| signature matcher | byte-level case-folded substring scan (`A-Z→a-z`), no regex — **no ReDoS**; substring FP (e.g. `fbi` inside a longer token) is a recall-favored design choice |
-| cumulative wall-clock | **45 s per-item deadline, now exact** — the connect call itself is bounded by the remaining budget (`connect(addr, min(15 s, remaining))`), so per-item worst case is the deadline, not deadline + connect overrun. At `PARALLELISM=8`, eight hostile slow-drip peers block all slots for at most ≈6 min, vs. the previous 90-minute `awaitTermination` cap. Closes a concept-implementation gap — the spec already said "per-item deadline 45 s" — and a real vector |
-| meta-refresh / JS redirects | semantic blindness, accepted: the parser returns `UP` on a 200 whose body is only a `<meta http-equiv="refresh">` — the seized destination is never fetched. The alternative (HTML execution) is a larger attack surface than the blindness |
+| Case                                             | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content-length` 100 MB                          | body capped at 256 KiB — no OOM                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| header missing / chunked                         | request speaks **HTTP/1.0** — chunked does not exist in 1.0, so the class is eliminated at the protocol level (device-verified: Ahmia `UP`/200 over 1.0). A spec-violating chunked reply still arrives as raw framing; a needle split across a chunk boundary can be missed — named residual                                                                                                                                                                          |
+| `Content-Encoding` (gzip/br/deflate)             | request advertises **no `Accept-Encoding`** — a compliant server cannot legally send compressed content; a violating one yields opaque bytes → signature FN. No decompressor by design: a capped gunzip would reintroduce a decompression-bomb surface that must itself be bounded                                                                                                                                                                                    |
+| UTF-16/other charsets                            | no `Accept-Charset` sent; non-ASCII-compatible bodies need an unusual explicit server config — named FN residual                                                                                                                                                                                                                                                                                                                                                      |
+| `content-length` semantics                       | **ignored entirely** — the parser stops trusting the declared length: body is read to `Connection: close` EOF or the 256 KiB cap, so a lying-small header can no longer hide a signature. The under-read FN was eliminated, not accepted (same-day fix, device-verified)                                                                                                                                                                                              |
+| header lies big (10 MB claimed, closes at 100 B) | reads to EOF — bounded                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| malformed status line                            | `parseCode` fails soft → `code=0` → `DOWN_HTTP(0)` — fail-closed, no exception escape                                                                                                                                                                                                                                                                                                                                                                                 |
+| signature matcher                                | byte-level case-folded substring scan (`A-Z→a-z`), no regex — **no ReDoS**; substring FP (e.g. `fbi` inside a longer token) is a recall-favored design choice                                                                                                                                                                                                                                                                                                         |
+| cumulative wall-clock                            | **45 s per-item deadline, now exact** — the connect call itself is bounded by the remaining budget (`connect(addr, min(15 s, remaining))`), so per-item worst case is the deadline, not deadline + connect overrun. At `PARALLELISM=8`, eight hostile slow-drip peers block all slots for at most ≈6 min, vs. the previous 90-minute `awaitTermination` cap. Closes a concept-implementation gap — the spec already said "per-item deadline 45 s" — and a real vector |
+| meta-refresh / JS redirects                      | semantic blindness, accepted: the parser returns `UP` on a 200 whose body is only a `<meta http-equiv="refresh">` — the seized destination is never fetched. The alternative (HTML execution) is a larger attack surface than the blindness                                                                                                                                                                                                                           |
 
 The response-content layer is now inventorized: compliant-server
 encodings are eliminated by the request itself (HTTP/1.0, no
@@ -140,10 +140,11 @@ exhaustion residual: the 45 s deadline bounds it, it does not remove
 the parallelism cap).
 
 **External validation (2026-10-30, post-implementation):**
+
 - Tor Project's own leak oracle makes our pending packet-level test
   easier than planned: `TestSocks 1` in torrc logs a `warn` for every
   connection handed an IP instead of a hostname, and `SafeSocks 1`
-  *rejects* such connects outright. Enabling `TestSocks` in Orbot's
+  _rejects_ such connects outright. Enabling `TestSocks` in Orbot's
   torrc turns "DNS silence" into a Tor-side log assertion — no
   tcpdump/root/AdGuard needed. The AdGuard deployment remains the
   stronger in-the-wild detector, but the controlled test is now
@@ -166,8 +167,8 @@ the parallelism cap).
 - **Tor-observed DNS silence — verified (2026-10-30, same day).**
   Orbot's custom-torrc field set to `TestSocks 1`; Tor then logged
   for both probe classes: `NOTICE: Your application (using socks5
-  to port 80) instructed Tor to take care of the DNS resolution
-  itself if necessary. This is good.` — once for the Ahmia `.onion`
+to port 80) instructed Tor to take care of the DNS resolution
+itself if necessary. This is good.` — once for the Ahmia `.onion`
   connect and once for the fake-onion/circuit-probe path; zero
   `warn` lines across the log. Tor itself testifies that Watch
   delegated resolution — stronger than the `createUnresolved`
@@ -176,14 +177,14 @@ the parallelism cap).
   that reach Tor — a hypothetical non-SOCKS stray query would never
   appear in its log. The five-site inventory makes strays
   unlikely but does not prove absence; the AdGuard/tcpdump
-  deployment remains the only *full-packet* proof and stays tracked
+  deployment remains the only _full-packet_ proof and stays tracked
   as the one residual this test cannot close.
 - **Operational decision:** `TestSocks 1` stays enabled in Orbot's
   torrc as a standing canary — a future regression (e.g. a
   constructor change back to implicit resolution) produces a `warn`
   immediately, independent of anyone remembering to re-run the
   check. **Full cost accounting:** not just NOTICE volume and log
-  growth — the canary persists *connection timestamps* in Orbot's
+  growth — the canary persists _connection timestamps_ in Orbot's
   log, i.e. exactly the check-timing pattern the app's jitter
   decision deliberately avoids persisting in-app. A device-access
   adversary could read that log and reconstruct when Watch ran.

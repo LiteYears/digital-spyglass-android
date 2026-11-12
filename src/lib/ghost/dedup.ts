@@ -13,10 +13,7 @@ export function normaliseKey(url: string): string {
   }
 }
 
-export function aggregate(
-  raw: (RawResult & { trust: number })[],
-  filterOn: boolean,
-): ResultRow[] {
+export function aggregate(raw: (RawResult & { trust: number })[], filterOn: boolean): ResultRow[] {
   const byKey = new Map<string, ResultRow>();
 
   for (const item of raw) {

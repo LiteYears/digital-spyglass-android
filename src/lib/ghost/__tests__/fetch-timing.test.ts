@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  retryBackoffMs,
-  sampleDelay,
-  shuffleEngines,
-  standardCamouflage,
-} from "../camouflage";
+import { retryBackoffMs, sampleDelay, shuffleEngines, standardCamouflage } from "../camouflage";
 
 describe("retryBackoffMs (jittered, non-fingerprinting)", () => {
   it("stays within [0.75x, 1.75x) of the base delay", () => {

@@ -111,21 +111,21 @@ of the user's DNS configuration.
 
 13 onion search engines are registered:
 
-| Engine | Note |
-| --- | --- |
-| Ahmia | Filtered index, anti-bot token, most stable parser |
-| Torch | Large unfiltered index, address rotates |
-| TorDex | Uncensored index, moderate coverage |
-| Not Evil | Pure HTML/PHP, no JS, no tracking |
-| Tor66 | Category directory + keyword search, captcha-free |
-| OnionLand | Onion + I2P indexing, ad-heavy pages |
-| Excavator | Crawler-based, moderate coverage |
-| Amnesia | Privacy-focused engine |
-| TheDeepSearches | Deep-web focused |
-| Torland | General onion index |
-| Onionway | General onion index |
-| OSS | OnionSearchServer, math captcha (POST + cookie flow) |
-| Torgle | Ad-free gateway, math captcha, trust 2 |
+| Engine          | Note                                                 |
+| --------------- | ---------------------------------------------------- |
+| Ahmia           | Filtered index, anti-bot token, most stable parser   |
+| Torch           | Large unfiltered index, address rotates              |
+| TorDex          | Uncensored index, moderate coverage                  |
+| Not Evil        | Pure HTML/PHP, no JS, no tracking                    |
+| Tor66           | Category directory + keyword search, captcha-free    |
+| OnionLand       | Onion + I2P indexing, ad-heavy pages                 |
+| Excavator       | Crawler-based, moderate coverage                     |
+| Amnesia         | Privacy-focused engine                               |
+| TheDeepSearches | Deep-web focused                                     |
+| Torland         | General onion index                                  |
+| Onionway        | General onion index                                  |
+| OSS             | OnionSearchServer, math captcha (POST + cookie flow) |
+| Torgle          | Ad-free gateway, math captcha, trust 2               |
 
 A circuit breaker skips an engine for 5 minutes after 3 consecutive failures.
 Cooldowns live in RAM only and reset with the app.
@@ -154,19 +154,19 @@ Full details: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md)
 
 ## Security controls
 
-| Control | Implementation |
-| --- | --- |
-| Zero persistence | `QueryClient` with `gcTime: 0`, `staleTime: 0`; no `localStorage` for search data |
-| Screen-off purge | `PianoScreenPlugin` receives `ACTION_SCREEN_OFF`, fires JS event, session is wiped |
-| Atomic panic wipe | Purges Tor cookie jar, WebView cache/storage and preferences, zero-overwrites app dirs, `finishAndRemoveTask`, process exit; PanicKit responder included |
-| VPN gate | Non-dismissible overlay; queries blocked unless VPN transport is up |
-| External content | Links open via `AppLauncher.openUrl` to Tor Browser; never rendered in-app |
-| Screenshot block | `FLAG_SECURE` on `MainActivity` window |
-| Backup exfiltration | `android:allowBackup="false"` + data extraction rules |
-| Release hardening | R8 minify + shrinkResources, ProGuard strips `Log.d/v/i` |
-| Transport isolation | Custom SOCKS5 client, RFC 1929 auth, fail-closed — never falls back to a shared no-auth circuit |
-| Onion integrity | v3 `.onion` checksum validated cryptographically (SHA3-256 per rend-spec-v3); canonical registry flags vanity-prefix spoof clones |
-| Redirect policy | v3-onion validation on every hop; `.onion` → clearnet redirects blocked; `Sec-Fetch-Site` transitions per hop |
+| Control             | Implementation                                                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zero persistence    | `QueryClient` with `gcTime: 0`, `staleTime: 0`; no `localStorage` for search data                                                                        |
+| Screen-off purge    | `PianoScreenPlugin` receives `ACTION_SCREEN_OFF`, fires JS event, session is wiped                                                                       |
+| Atomic panic wipe   | Purges Tor cookie jar, WebView cache/storage and preferences, zero-overwrites app dirs, `finishAndRemoveTask`, process exit; PanicKit responder included |
+| VPN gate            | Non-dismissible overlay; queries blocked unless VPN transport is up                                                                                      |
+| External content    | Links open via `AppLauncher.openUrl` to Tor Browser; never rendered in-app                                                                               |
+| Screenshot block    | `FLAG_SECURE` on `MainActivity` window                                                                                                                   |
+| Backup exfiltration | `android:allowBackup="false"` + data extraction rules                                                                                                    |
+| Release hardening   | R8 minify + shrinkResources, ProGuard strips `Log.d/v/i`                                                                                                 |
+| Transport isolation | Custom SOCKS5 client, RFC 1929 auth, fail-closed — never falls back to a shared no-auth circuit                                                          |
+| Onion integrity     | v3 `.onion` checksum validated cryptographically (SHA3-256 per rend-spec-v3); canonical registry flags vanity-prefix spoof clones                        |
+| Redirect policy     | v3-onion validation on every hop; `.onion` → clearnet redirects blocked; `Sec-Fetch-Site` transitions per hop                                            |
 
 ## Verified claims
 

@@ -67,10 +67,7 @@ function termFrequency(term: string, tokens: string[]): number {
  * Compute BM25 scores for a set of documents given a query.
  * Returns documents sorted by final score (descending).
  */
-export function bm25Rank(
-  query: string,
-  documents: BM25Document[],
-): BM25Scored[] {
+export function bm25Rank(query: string, documents: BM25Document[]): BM25Scored[] {
   if (documents.length === 0) return [];
 
   const queryTerms = tokenize(query);
@@ -104,14 +101,12 @@ export function bm25Rank(
 
       const idf = Math.log((N - n_t + 0.5) / (n_t + 0.5) + 1);
       const dl = docLengths[i]!;
-      const tfComponent = (tf * (K1 + 1)) / (tf + K1 * (1 - B + B * dl / avgdl));
+      const tfComponent = (tf * (K1 + 1)) / (tf + K1 * (1 - B + (B * dl) / avgdl));
       bm25 += idf * tfComponent;
     }
 
     const finalScore =
-      bm25 +
-      doc.engineCount * ENGINE_AGREEMENT_WEIGHT +
-      doc.trustScore * TRUST_WEIGHT;
+      bm25 + doc.engineCount * ENGINE_AGREEMENT_WEIGHT + doc.trustScore * TRUST_WEIGHT;
 
     return { ...doc, bm25, finalScore };
   });

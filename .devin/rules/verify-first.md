@@ -32,6 +32,7 @@ If a verification command cannot run (stack down, missing credentials, permissio
 ## No exceptions
 
 This rule applies to:
+
 - README updates
 - PR descriptions
 - Commit messages

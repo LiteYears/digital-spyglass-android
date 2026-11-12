@@ -187,7 +187,10 @@ function SearchScreen() {
     },
   });
 
-  const rawRows = outcome?.rows ?? progress?.rows ?? [];
+  const rawRows = useMemo(
+    () => outcome?.rows ?? progress?.rows ?? [],
+    [outcome?.rows, progress?.rows],
+  );
   const rows = useMemo(
     () => (outcome ? filterAndSort(rawRows, filter) : rawRows),
     [rawRows, filter, outcome],

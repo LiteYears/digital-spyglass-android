@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 // CI-side helper (scripts/ tree) — imported here because vitest only picks
 // up tests under src/. The .mjs is consumed by scripts/engine-healthcheck.mjs.
-import {
-  extractOnionLocation,
-  isV3OnionUrl,
-} from "../../../../scripts/lib/onion-location.mjs";
+import { extractOnionLocation, isV3OnionUrl } from "../../../../scripts/lib/onion-location.mjs";
 
 const OLD = "http://" + "a".repeat(56) + ".onion";
 const NEW = "http://" + "b".repeat(56) + ".onion";
@@ -53,9 +50,7 @@ describe("extractOnionLocation", () => {
 
   it("rejects non-v3 or non-http candidates", () => {
     const v2 = "http://" + "c".repeat(16) + ".onion";
-    expect(
-      extractOnionLocation({ headers: { "onion-location": v2 }, baseUrl: OLD }),
-    ).toBeNull();
+    expect(extractOnionLocation({ headers: { "onion-location": v2 }, baseUrl: OLD })).toBeNull();
     expect(
       extractOnionLocation({
         body: `<meta http-equiv="onion-location" content="https://${"d".repeat(56)}.onion">`,

@@ -51,7 +51,9 @@ export function extractOnionLocation({ headers, body, baseUrl }) {
     return { url: fromHeader, source: "header" };
   }
   const meta =
-    body?.match(/<meta[^>]+http-equiv=["']?onion-location["']?[^>]+content=["']([^"']+)["']/i)?.[1] ??
+    body?.match(
+      /<meta[^>]+http-equiv=["']?onion-location["']?[^>]+content=["']([^"']+)["']/i,
+    )?.[1] ??
     body?.match(/<meta[^>]+content=["']([^"']+)["'][^>]+http-equiv=["']?onion-location["']?/i)?.[1];
   if (meta && isV3OnionUrl(meta) && hostOf(meta) !== baseHost) {
     return { url: meta, source: "meta" };

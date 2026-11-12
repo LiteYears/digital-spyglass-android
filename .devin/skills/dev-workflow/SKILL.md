@@ -46,6 +46,7 @@ invokes a future `/dev-execute` skill.
 
 Write a concise implementation plan before editing code.
 State:
+
 - affected files
 - expected behavior change
 - risks
@@ -58,6 +59,7 @@ Do not proceed until the plan is coherent.
 
 If the task is too broad, split it.
 Prefer one clear PR per concern, for example:
+
 - docs-only
 - config-only
 - feature-flag plumbing
@@ -88,6 +90,7 @@ Prefer one clear PR per concern, for example:
 ### Step 7 — Prepare PR
 
 For every PR, provide:
+
 - title
 - short problem statement
 - exact change summary
@@ -101,6 +104,7 @@ For every PR, provide:
 ### Step 8 — Review Gate
 
 Before suggesting merge, verify:
+
 - CI is green
 - required tests passed
 - docs/contracts match code
@@ -139,6 +143,7 @@ When assigned a task, always respond in this order:
 ## Stop Conditions
 
 Stop and ask for guidance if:
+
 - the task touches multiple subsystems with unclear boundaries
 - the code contradicts the docs or contract
 - a migration changes runtime semantics unexpectedly

@@ -43,7 +43,7 @@ RepoType: git
 Repo: https://codeberg.org/sookoothaii/digital-spyglass-android.git
 
 Builds:
-  - versionName: '1.0'
+  - versionName: "1.0"
     versionCode: 1
     commit: v1.0.0
     subdir: android
@@ -99,5 +99,5 @@ MaintainerNotes: |-
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '4.0.1'
+CurrentVersion: "4.0.1"
 CurrentVersionCode: 11

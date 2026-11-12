@@ -5,44 +5,44 @@
 **App name:** Onion Search (Ghost)  
 **Package:** `org.darknetcrawler.mobile`  
 **Repository:** https://codeberg.org/sookoothaii/digital-spyglass-android  
-**License:** GPL-3.0-or-later  
+**License:** GPL-3.0-or-later
 
 ---
 
 ## Table of Contents
 
 1. [What Ghost Is](2. [What Ghost Is Not](#2-what-ghost-is-not)
-3. [System Requirements](#3-system-requirements)
-4. [Installation](#4-installation)
-5. [First-Time Setup: Orbot and Tor Browser](#5-first-time-setup-orbot-and-tor-browser)
-6. [Starting the App: Consent Gate](#6-starting-the-app-consent-gate)
-7. [The Search Tab](#7-the-search-tab)
-8. [The Engines Tab](#8-the-engines-tab)
-9. [Search Results](#9-search-results)
-10. [Opening Links Externally](#10-opening-links-externally)
-11. [Session Persistence and Tab Switching](#11-session-persistence-and-tab-switching)
-12. [Panic Wipe](#12-panic-wipe)
-13. [Session Purge](#13-session-purge)
-14. [Privacy and Security Guarantees](#14-privacy-and-security-guarantees)
-15. [What Ghost Does NOT Protect Against](#15-what-ghost-does-not-protect-against)
-16. [The 13 Onion Search Engines](#16-the-13-onion-search-engines)
-17. [Circuit Breaker](#17-circuit-breaker)
-18. [VPN Gate](#18-vpn-gate)
-19. [FLAG_SECURE (Screenshot Block)](#19-flag_secure-screenshot-block)
-20. [Pi-hole and Custom DNS Compatibility](#20-pi-hole-and-custom-dns-compatibility)
-21. [Building from Source (Windows)](#21-building-from-source-windows)
-22. [Building a Signed Release APK](#22-building-a-signed-release-apk)
-23. [Installing on a Device](#23-installing-on-a-device)
-24. [Testing and Debugging](#24-testing-and-debugging)
-25. [Publishing to Google Play](#25-publishing-to-google-play)
-26. [Alternative Distribution: F-Droid and GitHub Releases](#26-alternative-distribution-f-droid-and-github-releases)
-27. [Troubleshooting](#27-troubleshooting)
-28. [Project Structure](#28-project-structure)
-29. [Architecture and Data Flow](#29-architecture-and-data-flow)
-30. [Important Files Reference](#30-important-files-reference)
-31. [Git History and Known-Good Commits](#31-git-history-and-known-good-commits)
-32. [Legal Context and Researcher Access](#32-legal-context-and-researcher-access)
-33. [Glossary](#33-glossary)
+2. [System Requirements](#3-system-requirements)
+3. [Installation](#4-installation)
+4. [First-Time Setup: Orbot and Tor Browser](#5-first-time-setup-orbot-and-tor-browser)
+5. [Starting the App: Consent Gate](#6-starting-the-app-consent-gate)
+6. [The Search Tab](#7-the-search-tab)
+7. [The Engines Tab](#8-the-engines-tab)
+8. [Search Results](#9-search-results)
+9. [Opening Links Externally](#10-opening-links-externally)
+10. [Session Persistence and Tab Switching](#11-session-persistence-and-tab-switching)
+11. [Panic Wipe](#12-panic-wipe)
+12. [Session Purge](#13-session-purge)
+13. [Privacy and Security Guarantees](#14-privacy-and-security-guarantees)
+14. [What Ghost Does NOT Protect Against](#15-what-ghost-does-not-protect-against)
+15. [The 13 Onion Search Engines](#16-the-13-onion-search-engines)
+16. [Circuit Breaker](#17-circuit-breaker)
+17. [VPN Gate](#18-vpn-gate)
+18. [FLAG_SECURE (Screenshot Block)](#19-flag_secure-screenshot-block)
+19. [Pi-hole and Custom DNS Compatibility](#20-pi-hole-and-custom-dns-compatibility)
+20. [Building from Source (Windows)](#21-building-from-source-windows)
+21. [Building a Signed Release APK](#22-building-a-signed-release-apk)
+22. [Installing on a Device](#23-installing-on-a-device)
+23. [Testing and Debugging](#24-testing-and-debugging)
+24. [Publishing to Google Play](#25-publishing-to-google-play)
+25. [Alternative Distribution: F-Droid and GitHub Releases](#26-alternative-distribution-f-droid-and-github-releases)
+26. [Troubleshooting](#27-troubleshooting)
+27. [Project Structure](#28-project-structure)
+28. [Architecture and Data Flow](#29-architecture-and-data-flow)
+29. [Important Files Reference](#30-important-files-reference)
+30. [Git History and Known-Good Commits](#31-git-history-and-known-good-commits)
+31. [Legal Context and Researcher Access](#32-legal-context-and-researcher-access)
+32. [Glossary](#33-glossary)
 
 ---
 
@@ -66,31 +66,32 @@ Ghost (store name **Onion Search**; a Google Play listing is planned but the app
 
 ## 2. What Ghost Is Not
 
-| Not claimed | Why |
-|---|---|
-| Built-in Tor daemon | Ghost has no Tor node. It relies on Orbot (VPN mode) for Tor transport. |
-| Anti-root / anti-Frida / anti-debug | A JS-layer root check is theatre. The app shows a passive emulator hint only. |
-| Encrypted local data | Nothing sensitive is persisted, so there is nothing to encrypt. |
-| Stable engine uptime | Onion search engines rotate addresses and go offline. A dead engine is reported, never silently replaced. |
-| Content filter / blocklist | Ghost does not filter results. The user sees everything the engines return. |
-| Web browser | Ghost is a search interface. Page content is never rendered in-app. |
-| Content host | Ghost does not host, produce, or endorse any content. It is a search aggregator. |
-| VPN service | Ghost does not provide VPN. It requires Orbot for VPN/Tor transport. |
+| Not claimed                         | Why                                                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Built-in Tor daemon                 | Ghost has no Tor node. It relies on Orbot (VPN mode) for Tor transport.                                   |
+| Anti-root / anti-Frida / anti-debug | A JS-layer root check is theatre. The app shows a passive emulator hint only.                             |
+| Encrypted local data                | Nothing sensitive is persisted, so there is nothing to encrypt.                                           |
+| Stable engine uptime                | Onion search engines rotate addresses and go offline. A dead engine is reported, never silently replaced. |
+| Content filter / blocklist          | Ghost does not filter results. The user sees everything the engines return.                               |
+| Web browser                         | Ghost is a search interface. Page content is never rendered in-app.                                       |
+| Content host                        | Ghost does not host, produce, or endorse any content. It is a search aggregator.                          |
+| VPN service                         | Ghost does not provide VPN. It requires Orbot for VPN/Tor transport.                                      |
 
 ---
 
 ## 3. System Requirements
 
-| Requirement | Minimum | Recommended |
-|---|---|---|
-| Android version | 7.0 (API 24) | 10.0+ |
-| Target SDK | 36 (compiled) | 36 |
-| Storage | ~2 MB for APK | ~5 MB free |
-| RAM | 2 GB | 4 GB+ |
-| Network | Tor via Orbot | Orbot VPN mode |
-| Companion apps | Orbot + Tor Browser | Latest versions |
+| Requirement     | Minimum             | Recommended     |
+| --------------- | ------------------- | --------------- |
+| Android version | 7.0 (API 24)        | 10.0+           |
+| Target SDK      | 36 (compiled)       | 36              |
+| Storage         | ~2 MB for APK       | ~5 MB free      |
+| RAM             | 2 GB                | 4 GB+           |
+| Network         | Tor via Orbot       | Orbot VPN mode  |
+| Companion apps  | Orbot + Tor Browser | Latest versions |
 
 **Required companion apps:**
+
 1. **Orbot** — Tor proxy/VPN for Android (free, open-source)
 2. **Tor Browser for Android** — for opening result links externally
 
@@ -168,6 +169,7 @@ Tor Browser is needed because Ghost opens result links externally in Tor Browser
 4. After consent, the search interface is unlocked
 
 **If the VPN gate does not disappear:**
+
 - Ensure Orbot is running in VPN mode (not just proxy mode)
 - Ensure Ghost is in Orbot's app list
 - Restart Orbot
@@ -249,15 +251,15 @@ The Engines tab shows detailed information about each of the 13 search engines.
 
 ### What you see for each engine
 
-| Field | Description |
-|---|---|
-| Name | Engine name (e.g., Ahmia, Torch, Tor66) |
-| Trust level | Trust score (1-3), affects result ranking |
-| ON/OFF | Toggle to enable/disable the engine for the current session |
-| .onion address | The full v3 onion URL the engine is queried at |
-| Description | Brief note about the engine's characteristics |
-| Status | Live status (e.g., "TOR FETCH FAILED: SOCKS5 CONNECT FAILED: HOST UNREACHABLE" if down) |
-| OPEN IN TOR | Button to open the engine's homepage in Tor Browser |
+| Field          | Description                                                                             |
+| -------------- | --------------------------------------------------------------------------------------- |
+| Name           | Engine name (e.g., Ahmia, Torch, Tor66)                                                 |
+| Trust level    | Trust score (1-3), affects result ranking                                               |
+| ON/OFF         | Toggle to enable/disable the engine for the current session                             |
+| .onion address | The full v3 onion URL the engine is queried at                                          |
+| Description    | Brief note about the engine's characteristics                                           |
+| Status         | Live status (e.g., "TOR FETCH FAILED: SOCKS5 CONNECT FAILED: HOST UNREACHABLE" if down) |
+| OPEN IN TOR    | Button to open the engine's homepage in Tor Browser                                     |
 
 ### Engine states
 
@@ -278,16 +280,17 @@ If an engine is in cooldown but you want to try it again immediately, you can to
 
 Results are displayed in a **virtualized list** (TanStack Virtual) that can handle thousands of rows efficiently. Each result shows:
 
-| Field | Description |
-|---|---|
-| Title | The page title as returned by the search engine |
-| URL | The .onion URL of the result |
-| Snippet | A short text excerpt from the search engine (length-limited, not content-filtered) |
-| Engine tags | Which engines returned this result (e.g., "TORCH TORDEX TOR66 AHMIA") |
+| Field       | Description                                                                        |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Title       | The page title as returned by the search engine                                    |
+| URL         | The .onion URL of the result                                                       |
+| Snippet     | A short text excerpt from the search engine (length-limited, not content-filtered) |
+| Engine tags | Which engines returned this result (e.g., "TORCH TORDEX TOR66 AHMIA")              |
 
 ### Ranking
 
 Results are ranked by **BM25 (Okapi BM25)** — a formal information-retrieval algorithm:
+
 - BM25 scores each result based on query term frequency, document length, and inverse document frequency
 - Cross-engine agreement boost: results returned by multiple engines rank higher
 - Engine trust level is factored in (Trust 3 engines contribute more than Trust 1)
@@ -297,6 +300,7 @@ Results are ranked by **BM25 (Okapi BM25)** — a formal information-retrieval a
 ### Entity Extraction
 
 Results may display colored entity badges for:
+
 - **BTC** — Bitcoin addresses (P2PKH, P2SH, Bech32)
 - **XMR** — Monero addresses
 - **PGP** — PGP public key blocks
@@ -345,16 +349,19 @@ When you tap a result in the search list:
 4. Ghost stays in the background
 
 **What does NOT happen:**
+
 - Ghost never opens the URL in its own WebView
 - Ghost never renders the page content
 - Ghost never loads any resources from the linked page
 - Ghost never injects any scripts into the page
 
 **If Tor Browser is not installed:**
+
 - The link will not open
 - Install Tor Browser for Android from Google Play or torproject.org
 
 **In the Engines tab:**
+
 - Each engine has an "OPEN IN TOR" button
 - Tapping it opens the engine's .onion homepage in Tor Browser
 
@@ -437,38 +444,39 @@ On background transitions the `appStateChange` listener only refreshes the trans
 
 ### What Ghost guarantees
 
-| Guarantee | Implementation |
-|---|---|
-| Zero persistence | `QueryClient` with `gcTime: 0`, `staleTime: 0`; no `localStorage` for search data |
-| Session purge | Screen-off / panic wipe / process death wipe RAM state; backgrounding does not purge |
-| VPN gate | Non-dismissible overlay; queries blocked unless VPN transport is up |
-| No in-app rendering | Links open via `AppLauncher.openUrl` / `window.open` fallback; never rendered in-app |
-| Screenshot block | `FLAG_SECURE` in `MainActivity` — screenshots and recents preview are black |
-| No cloud backup | `android:allowBackup="false"` + `data_extraction_rules.xml` + `full_backup_content.xml` |
-| Panic wipe | Native hard wipe: cookie jar, WebView data, zero-overwrite shred of cache/app_webview/shared_prefs, process kill |
-| Release hardening | R8 minify + shrink resources, ProGuard rules, Android log stripping |
-| No telemetry | No analytics SDK, no crash reporting, no advertising SDK |
-| No backend | No server, no API, no cloud service — entirely client-side |
-| No accounts | No login, no registration, no identity |
-| Tor-only transport | All .onion requests go through Orbot SOCKS5 at 127.0.0.1:9050 |
-| Remote DNS | .onion hostnames resolved by Tor (SOCKS5 ATYP=DOMAINNAME), not system DNS |
-| No cookie persistence | Per-host cookie jar exists only in RAM for captcha flows, purged on exit |
+| Guarantee             | Implementation                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Zero persistence      | `QueryClient` with `gcTime: 0`, `staleTime: 0`; no `localStorage` for search data                                |
+| Session purge         | Screen-off / panic wipe / process death wipe RAM state; backgrounding does not purge                             |
+| VPN gate              | Non-dismissible overlay; queries blocked unless VPN transport is up                                              |
+| No in-app rendering   | Links open via `AppLauncher.openUrl` / `window.open` fallback; never rendered in-app                             |
+| Screenshot block      | `FLAG_SECURE` in `MainActivity` — screenshots and recents preview are black                                      |
+| No cloud backup       | `android:allowBackup="false"` + `data_extraction_rules.xml` + `full_backup_content.xml`                          |
+| Panic wipe            | Native hard wipe: cookie jar, WebView data, zero-overwrite shred of cache/app_webview/shared_prefs, process kill |
+| Release hardening     | R8 minify + shrink resources, ProGuard rules, Android log stripping                                              |
+| No telemetry          | No analytics SDK, no crash reporting, no advertising SDK                                                         |
+| No backend            | No server, no API, no cloud service — entirely client-side                                                       |
+| No accounts           | No login, no registration, no identity                                                                           |
+| Tor-only transport    | All .onion requests go through Orbot SOCKS5 at 127.0.0.1:9050                                                    |
+| Remote DNS            | .onion hostnames resolved by Tor (SOCKS5 ATYP=DOMAINNAME), not system DNS                                        |
+| No cookie persistence | Per-host cookie jar exists only in RAM for captcha flows, purged on exit                                         |
 
 ---
 
 ## 15. What Ghost Does NOT Protect Against
 
-| Not protected | Why |
-|---|---|
-| Compromised OS | If Android itself is compromised, no app can protect you |
-| Malicious keyboard | A keyboard app can log everything you type, including search queries |
-| Physical access while app is running | If someone has your phone while Ghost is open, they can see your results |
-| Orbot misconfiguration | If Orbot is not in VPN mode or is misconfigured, anonymity is not guaranteed |
-| Tor network compromise | Tor's 3-hop design provides strong anonymity but is not infallible |
-| Engine logging | Search engines may log your queries on their servers. This is outside Ghost's control. |
-| ISP/network observer | Mitigated by Tor, but not eliminated if Orbot is misconfigured |
+| Not protected                        | Why                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------- |
+| Compromised OS                       | If Android itself is compromised, no app can protect you                               |
+| Malicious keyboard                   | A keyboard app can log everything you type, including search queries                   |
+| Physical access while app is running | If someone has your phone while Ghost is open, they can see your results               |
+| Orbot misconfiguration               | If Orbot is not in VPN mode or is misconfigured, anonymity is not guaranteed           |
+| Tor network compromise               | Tor's 3-hop design provides strong anonymity but is not infallible                     |
+| Engine logging                       | Search engines may log your queries on their servers. This is outside Ghost's control. |
+| ISP/network observer                 | Mitigated by Tor, but not eliminated if Orbot is misconfigured                         |
 
 **For maximum safety:**
+
 - Use Orbot in VPN mode
 - Close Ghost when done (or use panic wipe)
 - Do not install untrusted keyboard apps
@@ -481,27 +489,28 @@ On background transitions the `appStateChange` listener only refreshes the trans
 
 Ghost queries 13 public onion search engines. Each has a trust level (1-3) that affects result ranking.
 
-| # | Engine | Trust | .onion Address | Notes |
-|---|---|---|---|---|
-| 1 | Ahmia | 3 | `http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion` | Filtered index, anti-bot token, most stable parser, Tor Project endorsed |
-| 2 | Torch | 2 | `http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion` | Large unfiltered index, address rotates frequently |
-| 3 | TorDex | 2 | `http://tordexu73joywapk2txdr54jed4imqledpcvcuf75qsas2gwdgksvnyd.onion` | CSS-selector scraping, moderate coverage |
-| 4 | Not Evil | 1 | `http://notevilugs2d6juvkm4nkfd635tynfmh2vshxzbpr5y4emczdufcubqd.onion` | Pure HTML/PHP, no JS, no tracking. Community-polished index. |
-| 5 | Tor66 | 1 | `http://tor66sewebgixwhcqfnp5inzp5x5uohhdy3kvtnyfxc2e5mxiuh34iid.onion` | Large index, category directory, often online when others are down |
-| 6 | OnionLand | 1 | `http://3bbad7fauom4d6sgppalyqddsqbf5u5p56b5k5uk2zxsy3d6ey2jobad.onion` | Ad-heavy result pages, links unwrapped from redirects |
-| 7 | Excavator | 1 | `http://2fd6cemt4gmccflhm6imvdfvli3nf7zn6rfrwpsy7uhxrgbypvwf5fad.onion` | General dark web index, verified live 2026-Q1 |
-| 8 | Amnesia | 1 | `http://amnesia7u5odx5xbwtpnqk3edybgud5bmiagu75bnqx2crntw5kry7ad.onion` | Verified live 2026-Q1, clean interface |
-| 9 | TheDeepSearches | 1 | `http://searchgf7gdtauh7bhnbyed4ivxqmuoat3nm6zfrg3ymkq6mtnpye3ad.onion` | Verified live 2026-Q1 |
-| 10 | Torland | 1 | `http://torlbmqwtudkorme6prgfpmsnile7ug2zm4u3ejpcncxuhpu4k2j4kyd.onion` | Verified live 2026-Q1 (SICRY) |
-| 11 | Onionway | 1 | (see `src/lib/ghost/engines.json`) | Verified live 2026-Q1 |
-| 12 | OSS | 1 | (see `src/lib/ghost/engines.json`) | OnionSearchServer, uses arithmetic CAPTCHA, requires POST + cookie flow |
-| 13 | Torgle | 2 | (see `src/lib/ghost/engines.json`) | Ad-free gateway, math captcha (DDoS protection) |
+| #   | Engine          | Trust | .onion Address                                                          | Notes                                                                    |
+| --- | --------------- | ----- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | Ahmia           | 3     | `http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion` | Filtered index, anti-bot token, most stable parser, Tor Project endorsed |
+| 2   | Torch           | 2     | `http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion` | Large unfiltered index, address rotates frequently                       |
+| 3   | TorDex          | 2     | `http://tordexu73joywapk2txdr54jed4imqledpcvcuf75qsas2gwdgksvnyd.onion` | CSS-selector scraping, moderate coverage                                 |
+| 4   | Not Evil        | 1     | `http://notevilugs2d6juvkm4nkfd635tynfmh2vshxzbpr5y4emczdufcubqd.onion` | Pure HTML/PHP, no JS, no tracking. Community-polished index.             |
+| 5   | Tor66           | 1     | `http://tor66sewebgixwhcqfnp5inzp5x5uohhdy3kvtnyfxc2e5mxiuh34iid.onion` | Large index, category directory, often online when others are down       |
+| 6   | OnionLand       | 1     | `http://3bbad7fauom4d6sgppalyqddsqbf5u5p56b5k5uk2zxsy3d6ey2jobad.onion` | Ad-heavy result pages, links unwrapped from redirects                    |
+| 7   | Excavator       | 1     | `http://2fd6cemt4gmccflhm6imvdfvli3nf7zn6rfrwpsy7uhxrgbypvwf5fad.onion` | General dark web index, verified live 2026-Q1                            |
+| 8   | Amnesia         | 1     | `http://amnesia7u5odx5xbwtpnqk3edybgud5bmiagu75bnqx2crntw5kry7ad.onion` | Verified live 2026-Q1, clean interface                                   |
+| 9   | TheDeepSearches | 1     | `http://searchgf7gdtauh7bhnbyed4ivxqmuoat3nm6zfrg3ymkq6mtnpye3ad.onion` | Verified live 2026-Q1                                                    |
+| 10  | Torland         | 1     | `http://torlbmqwtudkorme6prgfpmsnile7ug2zm4u3ejpcncxuhpu4k2j4kyd.onion` | Verified live 2026-Q1 (SICRY)                                            |
+| 11  | Onionway        | 1     | (see `src/lib/ghost/engines.json`)                                      | Verified live 2026-Q1                                                    |
+| 12  | OSS             | 1     | (see `src/lib/ghost/engines.json`)                                      | OnionSearchServer, uses arithmetic CAPTCHA, requires POST + cookie flow  |
+| 13  | Torgle          | 2     | (see `src/lib/ghost/engines.json`)                                      | Ad-free gateway, math captcha (DDoS protection)                          |
 
 **Note:** Onion addresses rotate and go offline. If an engine is consistently unreachable, its address may need updating in `src/lib/ghost/engines.json`.
 
 ### OSS CAPTCHA handling
 
 OSS (OnionSearchServer) uses a real arithmetic CAPTCHA. Ghost handles this automatically:
+
 1. First request to OSS may return a CAPTCHA page
 2. Ghost detects the CAPTCHA, extracts the arithmetic problem
 3. Ghost solves the problem and submits the answer via POST with cookies
@@ -651,6 +660,7 @@ winget install Google.AndroidStudio
 5. **Apply** → download → **OK**
 
 Verify:
+
 ```powershell
 $Sdk = "$env:LOCALAPPDATA\Android\Sdk"
 Test-Path "$Sdk\platform-tools\adb.exe"  # Must be True
@@ -683,24 +693,25 @@ cd android
 ```
 
 **Output:**
+
 ```
 android\app\build\outputs\apk\debug\app-debug.apk
 ```
 
 ### Build commands reference
 
-| Command | What it does |
-|---|---|
-| `bun install` | Install npm dependencies |
-| `bun run lint` | ESLint check |
-| `bun run build:mobile` | Build SPA for Android (`MOBILE=1` vite build) → `dist/client` |
-| `bunx cap sync android` | Sync web assets and plugins into Android project |
-| `bun run mobile:sync` | Build + sync (`bun run build:mobile && cap sync android`) |
-| `bun run mobile:android` | Sync, then open the project in Android Studio |
-| `bun run mobile:localprops` | Broken: target `scripts/write-local-properties.mjs` does not exist — write `android/local.properties` manually |
-| `bun run test` / `test:coverage` | Vitest suite / coverage gate |
-| `cd android; .\gradlew.bat assembleDebug` | Build debug APK |
-| `cd android; .\gradlew.bat assembleRelease` | Build signed release APK |
+| Command                                     | What it does                                                                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `bun install`                               | Install npm dependencies                                                                                       |
+| `bun run lint`                              | ESLint check                                                                                                   |
+| `bun run build:mobile`                      | Build SPA for Android (`MOBILE=1` vite build) → `dist/client`                                                  |
+| `bunx cap sync android`                     | Sync web assets and plugins into Android project                                                               |
+| `bun run mobile:sync`                       | Build + sync (`bun run build:mobile && cap sync android`)                                                      |
+| `bun run mobile:android`                    | Sync, then open the project in Android Studio                                                                  |
+| `bun run mobile:localprops`                 | Broken: target `scripts/write-local-properties.mjs` does not exist — write `android/local.properties` manually |
+| `bun run test` / `test:coverage`            | Vitest suite / coverage gate                                                                                   |
+| `cd android; .\gradlew.bat assembleDebug`   | Build debug APK                                                                                                |
+| `cd android; .\gradlew.bat assembleRelease` | Build signed release APK                                                                                       |
 
 ### Important notes
 
@@ -750,6 +761,7 @@ cd android
 ```
 
 **Output:**
+
 ```
 android\app\build\outputs\apk\release\app-release.apk
 ```
@@ -846,21 +858,21 @@ After enabling, forward the DevTools port:
 
 Tested on Samsung R5CR937FWMF with Orbot VPN mode active:
 
-| Test | Result |
-|---|---|
-| Release APK installation | Pass (after uninstalling debug version) |
-| App start | Pass (no crashes) |
-| Consent gate | Pass (displayed at launch) |
-| VPN/Orbot detection | Pass (auto-detected) |
-| Search "test" | Pass — 1352 results in 9177ms, 12/13 engines |
-| Search "marketplace" | Pass — 2139 results in 17264ms |
-| Tab switch Search→Engines→Search | Pass — results preserved |
-| Background→Foreground | Pass — results preserved |
-| FLAG_SECURE | Pass — screenshots are black |
-| Engine report | Pass — expandable with per-engine stats |
-| OSS CAPTCHA | Pass — 13 hits, captcha flow works |
-| Tor66 | Pass — 47 hits, URL fix confirmed |
-| Haystak | Unreachable (engine offline, not a code bug) |
+| Test                             | Result                                       |
+| -------------------------------- | -------------------------------------------- |
+| Release APK installation         | Pass (after uninstalling debug version)      |
+| App start                        | Pass (no crashes)                            |
+| Consent gate                     | Pass (displayed at launch)                   |
+| VPN/Orbot detection              | Pass (auto-detected)                         |
+| Search "test"                    | Pass — 1352 results in 9177ms, 12/13 engines |
+| Search "marketplace"             | Pass — 2139 results in 17264ms               |
+| Tab switch Search→Engines→Search | Pass — results preserved                     |
+| Background→Foreground            | Pass — results preserved                     |
+| FLAG_SECURE                      | Pass — screenshots are black                 |
+| Engine report                    | Pass — expandable with per-engine stats      |
+| OSS CAPTCHA                      | Pass — 13 hits, captcha flow works           |
+| Tor66                            | Pass — 47 hits, URL fix confirmed            |
+| Haystak                          | Unreachable (engine offline, not a code bug) |
 
 ---
 
@@ -896,6 +908,7 @@ questionnaire (Adults Only 18+).
 ### Google Play App Signing
 
 When uploading your first APK, opt in to **Google Play App Signing**:
+
 - Google re-signs the APK with its own key
 - Your upload key authenticates future uploads
 - Keep your upload keystore safe
@@ -939,31 +952,31 @@ If Google Play is not available or the app is rejected, alternative distribution
 
 ### Build issues
 
-| Problem | Solution |
-|---|---|
-| `bun : The term 'bun' is not recognized` | Close and reopen PowerShell; or `$env:Path += ";$env:USERPROFILE\.bun\bin"` |
-| `Bun could not find a package.json file` | You are in the wrong directory. `cd digital-spyglass-android` |
-| `SDK location not found ... ANDROID_HOME` | Create `android/local.properties` with `sdk.dir=<SDK path>` (the `mobile:localprops` script target is missing) |
-| `adb ... not recognized` | Use full path: `$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"` |
-| Gradle path errors | Spaces in project path. Move to a path without spaces. |
-| `gradlew.bat` won't start / wrong Java | Install JDK 21: `winget install EclipseAdoptium.Temurin.21.JDK` |
-| `Several environment variables ... contain different paths` | `$env:ANDROID_PREFS_ROOT = $null` before building |
-| `cap sync` can't find web directory | Run `bun run build:mobile` first (it creates `dist/client`) |
-| `android/` folder is nearly empty | Run `bunx cap add android` again |
-| App starts, screen stays black | You synced the SSR build instead of the mobile build. Run `bun run build:mobile` + `cap sync` |
-| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | Uninstall the old version first: `adb uninstall org.darknetcrawler.mobile` |
+| Problem                                                     | Solution                                                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `bun : The term 'bun' is not recognized`                    | Close and reopen PowerShell; or `$env:Path += ";$env:USERPROFILE\.bun\bin"`                                    |
+| `Bun could not find a package.json file`                    | You are in the wrong directory. `cd digital-spyglass-android`                                                  |
+| `SDK location not found ... ANDROID_HOME`                   | Create `android/local.properties` with `sdk.dir=<SDK path>` (the `mobile:localprops` script target is missing) |
+| `adb ... not recognized`                                    | Use full path: `$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"`                                 |
+| Gradle path errors                                          | Spaces in project path. Move to a path without spaces.                                                         |
+| `gradlew.bat` won't start / wrong Java                      | Install JDK 21: `winget install EclipseAdoptium.Temurin.21.JDK`                                                |
+| `Several environment variables ... contain different paths` | `$env:ANDROID_PREFS_ROOT = $null` before building                                                              |
+| `cap sync` can't find web directory                         | Run `bun run build:mobile` first (it creates `dist/client`)                                                    |
+| `android/` folder is nearly empty                           | Run `bunx cap add android` again                                                                               |
+| App starts, screen stays black                              | You synced the SSR build instead of the mobile build. Run `bun run build:mobile` + `cap sync`                  |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE`                        | Uninstall the old version first: `adb uninstall org.darknetcrawler.mobile`                                     |
 
 ### Runtime issues
 
-| Problem | Solution |
-|---|---|
-| UI stays locked ("VPN required") | Start Orbot in VPN mode, ensure Ghost is in Orbot's app list |
-| All engines red / no results | Onion engines may be down. Check Engines tab, reset circuit breakers. |
-| Link does not open | Install Tor Browser for Android |
+| Problem                                           | Solution                                                                            |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| UI stays locked ("VPN required")                  | Start Orbot in VPN mode, ensure Ghost is in Orbot's app list                        |
+| All engines red / no results                      | Onion engines may be down. Check Engines tab, reset circuit breakers.               |
+| Link does not open                                | Install Tor Browser for Android                                                     |
 | Results disappear after screen-off or app restart | Expected behavior — screen-off/exit purge clears RAM (backgrounding alone does not) |
-| Cannot take screenshot | Expected — FLAG_SECURE is active |
-| An engine shows "UNREACHABLE" | Engine is offline. Not a code bug. Circuit breaker will skip it. |
-| `PianoTorHttp already registered` warning | Harmless — Capacitor registers plugin both native and JS. Functions normally. |
+| Cannot take screenshot                            | Expected — FLAG_SECURE is active                                                    |
+| An engine shows "UNREACHABLE"                     | Engine is offline. Not a code bug. Circuit breaker will skip it.                    |
+| `PianoTorHttp already registered` warning         | Harmless — Capacitor registers plugin both native and JS. Functions normally.       |
 
 ---
 
@@ -1066,63 +1079,63 @@ digital-spyglass-android/
 
 ### Frontend (TypeScript/React)
 
-| File | Responsibility |
-|---|---|
-| `src/lib/ghost/engines.json` | 13 engine descriptors (URLs, trust levels, selectors, health) |
-| `src/lib/ghost/engines.ts` | Parser strategies + registry loader (engine data in `engines.json`) |
-| `src/lib/ghost/search.ts` | Parallel orchestrator, per-engine error isolation, dedupe, BM25 ranking |
-| `src/lib/ghost/ranking.ts` | Formal BM25 (Okapi BM25) ranking algorithm |
-| `src/lib/ghost/stix.ts` | STIX 2.1 export (OASIS standard, opt-in) |
-| `src/lib/ghost/blacklist.ts` | Ahmia abuse blacklist opt-in filter (RAM cache) |
-| `src/lib/ghost/http.ts` | Tor-only HTTP layer (.onion → PianoTorHttp; non-.onion rejected) |
-| `src/lib/ghost/parse.ts` | Per-engine HTML extraction (DOMParser detached, never rendered) |
-| `src/lib/ghost/types.ts` | TypeScript types (`RawResult`, `ResultRow`, `EngineState`) |
-| `src/lib/platform/bridge.ts` | Lazy Capacitor bridge, `registerPlugin("PianoTorHttp")`, `torFetch()` |
-| `src/lib/store/ghost-context.tsx` | GhostContext (search state survives tab switching, purge logic) |
-| `src/components/app/disclaimer.tsx` | Consent gate (18+ research tool, shown at every start) |
-| `src/routes/index.tsx` | Main search route |
-| `src/routes/__root.tsx` | Root layout with VPN gate |
+| File                                | Responsibility                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| `src/lib/ghost/engines.json`        | 13 engine descriptors (URLs, trust levels, selectors, health)           |
+| `src/lib/ghost/engines.ts`          | Parser strategies + registry loader (engine data in `engines.json`)     |
+| `src/lib/ghost/search.ts`           | Parallel orchestrator, per-engine error isolation, dedupe, BM25 ranking |
+| `src/lib/ghost/ranking.ts`          | Formal BM25 (Okapi BM25) ranking algorithm                              |
+| `src/lib/ghost/stix.ts`             | STIX 2.1 export (OASIS standard, opt-in)                                |
+| `src/lib/ghost/blacklist.ts`        | Ahmia abuse blacklist opt-in filter (RAM cache)                         |
+| `src/lib/ghost/http.ts`             | Tor-only HTTP layer (.onion → PianoTorHttp; non-.onion rejected)        |
+| `src/lib/ghost/parse.ts`            | Per-engine HTML extraction (DOMParser detached, never rendered)         |
+| `src/lib/ghost/types.ts`            | TypeScript types (`RawResult`, `ResultRow`, `EngineState`)              |
+| `src/lib/platform/bridge.ts`        | Lazy Capacitor bridge, `registerPlugin("PianoTorHttp")`, `torFetch()`   |
+| `src/lib/store/ghost-context.tsx`   | GhostContext (search state survives tab switching, purge logic)         |
+| `src/components/app/disclaimer.tsx` | Consent gate (18+ research tool, shown at every start)                  |
+| `src/routes/index.tsx`              | Main search route                                                       |
+| `src/routes/__root.tsx`             | Root layout with VPN gate                                               |
 
 ### Native (Java)
 
-| File | Responsibility |
-|---|---|
-| `MainActivity.java` | Activity entry, FLAG_SECURE, splash screen |
-| `PianoTorHttpPlugin.java` | Native Tor HTTP fetch (SOCKS5, remote DNS, per-host cookies, GET+POST) |
-| `PianoVpnPlugin.java` | VPN transport detection (TRANSPORT_VPN check) |
-| `PianoScreenPlugin.java` | Screen-off detection (ACTION_SCREEN_OFF), hard panic wipe (shred + process kill) |
-| `PanicResponderActivity.java` | Guardian Project PanicKit responder (`panic.action.TRIGGER`) |
+| File                          | Responsibility                                                                   |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `MainActivity.java`           | Activity entry, FLAG_SECURE, splash screen                                       |
+| `PianoTorHttpPlugin.java`     | Native Tor HTTP fetch (SOCKS5, remote DNS, per-host cookies, GET+POST)           |
+| `PianoVpnPlugin.java`         | VPN transport detection (TRANSPORT_VPN check)                                    |
+| `PianoScreenPlugin.java`      | Screen-off detection (ACTION_SCREEN_OFF), hard panic wipe (shred + process kill) |
+| `PanicResponderActivity.java` | Guardian Project PanicKit responder (`panic.action.TRIGGER`)                     |
 
 ### Configuration
 
-| File | Responsibility |
-|---|---|
-| `capacitor.config.ts` | App config (appId, appName, webContentsDebuggingEnabled, captureInput) |
-| `android/app/build.gradle` | Release signing config, R8 minify, ProGuard |
-| `android/variables.gradle` | SDK versions (minSdk=24, compileSdk=36, targetSdk=36) |
-| `android/key.properties` | Release keystore config (not in git) |
+| File                       | Responsibility                                                         |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `capacitor.config.ts`      | App config (appId, appName, webContentsDebuggingEnabled, captureInput) |
+| `android/app/build.gradle` | Release signing config, R8 minify, ProGuard                            |
+| `android/variables.gradle` | SDK versions (minSdk=24, compileSdk=36, targetSdk=36)                  |
+| `android/key.properties`   | Release keystore config (not in git)                                   |
 
 ### Scripts
 
-| File | Responsibility |
-|---|---|
+| File                             | Responsibility                                                |
+| -------------------------------- | ------------------------------------------------------------- |
 | `scripts/engine-healthcheck.mjs` | Weekly Tor liveness probe; maintains engines.json health data |
 
 ---
 
 ## 31. Git History and Known-Good Commits
 
-| Commit | Description |
-|---|---|
-| `fe79465` | More engines, session persistence, disclaimer on every start, engine grid |
-| `dedfe8b` | Search state moved into GhostContext (survives tab switching) |
-| `2acde5e` | Tor66 timeout 45s and OSS CAPTCHA false-positive fix |
+| Commit    | Description                                                                            |
+| --------- | -------------------------------------------------------------------------------------- |
+| `fe79465` | More engines, session persistence, disclaimer on every start, engine grid              |
+| `dedfe8b` | Search state moved into GhostContext (survives tab switching)                          |
+| `2acde5e` | Tor66 timeout 45s and OSS CAPTCHA false-positive fix                                   |
 | `2728b93` | **KNOWN-GOOD BASELINE** — OSS CAPTCHA POST+cookies, Tor66 URL fix, collapsible results |
-| `c6bf05e` | Consent-based research disclaimer and legal documentation (later reverted) |
-| `e29182c` | Revert of c6bf05e, returning code toward 2728b93 state |
-| `7756ef6` | Only `disclaimer.tsx` changed for consent-based research disclaimer |
-| `31d988a` | Docs: Maximum Openness Research (777 lines, 46 sources) |
-| `8c4b459` | Play Store readiness + Open Source (GPLv3) + Release Build Pipeline |
+| `c6bf05e` | Consent-based research disclaimer and legal documentation (later reverted)             |
+| `e29182c` | Revert of c6bf05e, returning code toward 2728b93 state                                 |
+| `7756ef6` | Only `disclaimer.tsx` changed for consent-based research disclaimer                    |
+| `31d988a` | Docs: Maximum Openness Research (777 lines, 46 sources)                                |
+| `8c4b459` | Play Store readiness + Open Source (GPLv3) + Release Build Pipeline                    |
 
 **Do not regress below `2728b93` functionality.** This is the verified working baseline.
 
@@ -1134,14 +1147,14 @@ Ghost is positioned as a **research tool / intermediary**, not a content publish
 
 ### Key legal findings (see `docs/MAXIMUM_OPENNESS_RESEARCH.md` for details)
 
-| Jurisdiction | Key protection |
-|---|---|
-| USA | Section 230 CDA protects search tools from liability for third-party content; DMCA 512(d) covers information location tools |
-| EU | DSA Art. 4-6 provides intermediary liability exemptions for neutral, automatic processing; EU Charter Art. 11 protects right to receive information; European Media Freedom Act (2024) protects journalists' right to collect information |
-| Germany | DDG (formerly TMG) §7 mere conduit; BGH Paperboy affirms search engines not liable for linked content |
-| UK | Online Safety Act 2023 §33 requires freedom of expression regard when imposing safety measures |
-| China | "Technical neutrality" defense successfully used 2024-2025 to dismiss criminal charges against VPN tool developers |
-| Russia | New law (Sept 2025) penalizes intentional search for extremist content but ordinary VPN use is not penalized |
+| Jurisdiction | Key protection                                                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| USA          | Section 230 CDA protects search tools from liability for third-party content; DMCA 512(d) covers information location tools                                                                                                               |
+| EU           | DSA Art. 4-6 provides intermediary liability exemptions for neutral, automatic processing; EU Charter Art. 11 protects right to receive information; European Media Freedom Act (2024) protects journalists' right to collect information |
+| Germany      | DDG (formerly TMG) §7 mere conduit; BGH Paperboy affirms search engines not liable for linked content                                                                                                                                     |
+| UK           | Online Safety Act 2023 §33 requires freedom of expression regard when imposing safety measures                                                                                                                                            |
+| China        | "Technical neutrality" defense successfully used 2024-2025 to dismiss criminal charges against VPN tool developers                                                                                                                        |
+| Russia       | New law (Sept 2025) penalizes intentional search for extremist content but ordinary VPN use is not penalized                                                                                                                              |
 
 ### The sweet spot
 
@@ -1161,29 +1174,29 @@ This legal research is **not legal advice**. Laws vary by jurisdiction and chang
 
 ## 33. Glossary
 
-| Term | Definition |
-|---|---|
-| **.onion** | A top-level domain suffix for Tor hidden services. Only accessible through the Tor network. |
-| **CAPTCHA** | A challenge-response test to verify the user is human. OSS uses an arithmetic CAPTCHA. |
-| **Capacitor** | A cross-platform native runtime that wraps web apps in a native Android/iOS shell. |
-| **Circuit breaker** | A pattern that prevents repeated calls to a failing service. In Ghost: 3 failures = 5 min cooldown. |
-| **Clearnet** | The regular internet, accessed without Tor. Ghost excludes clearnet entirely. |
-| **Consent gate** | A dialog requiring the user to confirm they are 18+ and accept responsibility before using the app. |
-| **DOMParser** | A browser API that parses HTML into a DOM tree without rendering it. Ghost uses a detached document. |
-| **FLAG_SECURE** | An Android flag that prevents screenshots and recents preview. |
-| **GhostContext** | A React Context that holds search state, surviving tab switches within a session. |
-| **Meta-search** | A search tool that queries multiple other search engines and aggregates results. |
-| **Orbot** | A free, open-source Tor proxy/VPN app for Android, maintained by The Tor Project and Guardian Project. |
-| **OSINT** | Open Source Intelligence — the practice of collecting and analyzing publicly available information. |
-| **Panic wipe** | A feature that instantly clears all RAM data and resets the app to its initial state. |
-| **Pi-hole** | A network-level ad and tracker blocker that runs as a DNS server. Ghost works with and without it. |
-| **RAM-only** | Data exists only in memory and is never written to disk. Purged on exit or background. |
-| **SOCKS5** | A proxy protocol that supports hostname resolution (ATYP=DOMAINNAME), allowing Tor to resolve .onion addresses. |
-| **Tor** | An anonymity network that routes traffic through three relays to hide the user's origin. |
-| **Tor Browser** | A web browser based on Firefox that routes all traffic through Tor. Ghost opens links in it externally. |
-| **VPN gate** | A non-dismissible overlay in Ghost that blocks all UI until a VPN transport is active. |
-| **v3 onion address** | The current format of .onion addresses (56 characters), replacing the deprecated v2 format. |
+| Term                 | Definition                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **.onion**           | A top-level domain suffix for Tor hidden services. Only accessible through the Tor network.                     |
+| **CAPTCHA**          | A challenge-response test to verify the user is human. OSS uses an arithmetic CAPTCHA.                          |
+| **Capacitor**        | A cross-platform native runtime that wraps web apps in a native Android/iOS shell.                              |
+| **Circuit breaker**  | A pattern that prevents repeated calls to a failing service. In Ghost: 3 failures = 5 min cooldown.             |
+| **Clearnet**         | The regular internet, accessed without Tor. Ghost excludes clearnet entirely.                                   |
+| **Consent gate**     | A dialog requiring the user to confirm they are 18+ and accept responsibility before using the app.             |
+| **DOMParser**        | A browser API that parses HTML into a DOM tree without rendering it. Ghost uses a detached document.            |
+| **FLAG_SECURE**      | An Android flag that prevents screenshots and recents preview.                                                  |
+| **GhostContext**     | A React Context that holds search state, surviving tab switches within a session.                               |
+| **Meta-search**      | A search tool that queries multiple other search engines and aggregates results.                                |
+| **Orbot**            | A free, open-source Tor proxy/VPN app for Android, maintained by The Tor Project and Guardian Project.          |
+| **OSINT**            | Open Source Intelligence — the practice of collecting and analyzing publicly available information.             |
+| **Panic wipe**       | A feature that instantly clears all RAM data and resets the app to its initial state.                           |
+| **Pi-hole**          | A network-level ad and tracker blocker that runs as a DNS server. Ghost works with and without it.              |
+| **RAM-only**         | Data exists only in memory and is never written to disk. Purged on exit or background.                          |
+| **SOCKS5**           | A proxy protocol that supports hostname resolution (ATYP=DOMAINNAME), allowing Tor to resolve .onion addresses. |
+| **Tor**              | An anonymity network that routes traffic through three relays to hide the user's origin.                        |
+| **Tor Browser**      | A web browser based on Firefox that routes all traffic through Tor. Ghost opens links in it externally.         |
+| **VPN gate**         | A non-dismissible overlay in Ghost that blocks all UI until a VPN transport is active.                          |
+| **v3 onion address** | The current format of .onion addresses (56 characters), replacing the deprecated v2 format.                     |
 
 ---
 
-*This manual covers everything related to the Ghost (Onion Search) system as of 2026-10-24. For the latest updates, check the Codeberg repository: https://codeberg.org/sookoothaii/digital-spyglass-android*
+_This manual covers everything related to the Ghost (Onion Search) system as of 2026-10-24. For the latest updates, check the Codeberg repository: https://codeberg.org/sookoothaii/digital-spyglass-android_

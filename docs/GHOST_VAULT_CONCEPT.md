@@ -47,25 +47,25 @@ discover → read → keep → monitor → submit
 
 ## Threat model delta (explicit, documented)
 
-| Protected | Not protected |
-|---|---|
-| Store contents: AES-256-GCM, passphrase-derived key | App existence on device (mitigated by neutral launcher name, §Naming) |
-| Plaintext lives in RAM only while unlocked | Item count / store size growth (v1.1: size-class padding) |
-| Panic removes ALL store files incl. `.tmp` (flash caveat below) | Physical block destruction on eMMC/UFS — see honesty note |
-| Screen-off → instant re-lock | Unlocked-device access while vault is open |
-| Store never leaves device (`allowBackup=false`, tested) | Coerced passphrase disclosure (no deniability v1) |
-| Passphrase RAM lifetime (best-effort, ART caveat below) | Per-item origin metadata (`source`) after decryption |
-| Direct shares from unknown packages (whitelist) | PendingIntent delegation — a whitelisted app could hand its share intent to a hostile app; documented limit, v1 |
+| Protected                                                       | Not protected                                                                                                   |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Store contents: AES-256-GCM, passphrase-derived key             | App existence on device (mitigated by neutral launcher name, §Naming)                                           |
+| Plaintext lives in RAM only while unlocked                      | Item count / store size growth (v1.1: size-class padding)                                                       |
+| Panic removes ALL store files incl. `.tmp` (flash caveat below) | Physical block destruction on eMMC/UFS — see honesty note                                                       |
+| Screen-off → instant re-lock                                    | Unlocked-device access while vault is open                                                                      |
+| Store never leaves device (`allowBackup=false`, tested)         | Coerced passphrase disclosure (no deniability v1)                                                               |
+| Passphrase RAM lifetime (best-effort, ART caveat below)         | Per-item origin metadata (`source`) after decryption                                                            |
+| Direct shares from unknown packages (whitelist)                 | PendingIntent delegation — a whitelisted app could hand its share intent to a hostile app; documented limit, v1 |
 
 **Flash destruction — the honest claim.** Panic wipe unlinks
 `notes.gve` + `notes.gve.bak` + `notes.gve.tmp` and overwrites logical
 sectors (3-7 passes fresh random data as probabilistic hardening). On
 eMMC/UFS flash physical deletion is NOT guaranteed — wear-leveling may
 leave old blocks intact until garbage collection. Panic screen and
-`THREAT_MODEL` state: *"Panic removes the store and overwrites logical
+`THREAT_MODEL` state: _"Panic removes the store and overwrites logical
 sectors; physical block destruction on flash is not guaranteed. Operators
 requiring hardware-level destruction must wipe app data via OS or destroy
-the device."* Never claim "shredded = physically destroyed".
+the device."_ Never claim "shredded = physically destroyed".
 
 **JVM zeroing — the honest limit.** `char[]` zeroing under ART is
 best-effort: JIT may elide writes, GC may copy array references. A
@@ -106,12 +106,13 @@ sequence (crash at any point leaves ≥1 intact file):
    covered by panic wipe.
 
 **Corruption ladder at unlock:**
-- `notes.gve` fails GCM/parse → fall back to `.bak`, show: *"Store damaged —
-  restored last backup. Recent additions may be lost."* (item count is
+
+- `notes.gve` fails GCM/parse → fall back to `.bak`, show: _"Store damaged —
+  restored last backup. Recent additions may be lost."_ (item count is
   unknowable on auth failure — never claim a number)
-- BOTH files fail → terminal state: *"Store irrecoverably damaged — the
+- BOTH files fail → terminal state: _"Store irrecoverably damaged — the
   encryption envelope failed authentication. No recovery is possible.
-  Start fresh, or restore from an external export."* AES-GCM is
+  Start fresh, or restore from an external export."_ AES-GCM is
   all-or-nothing per envelope: no "decryptable fragments" exist in a
   single-envelope store. Partial recovery requires chunked envelopes —
   §v1.1 item 5.
@@ -140,6 +141,7 @@ state visible rather than silently lose the share.
 4. Full React UI boots only on explicit open (PanicResponder pattern).
 
 **Receiver hardening:**
+
 - **Package whitelist (cold path)**: passphrase prompt shows only for
   shares from trusted packages (Tor Browser builds, SAF, Ghost). Unknown
   packages → rejection **notification** ("Share from unknown app — tap to
@@ -173,11 +175,11 @@ connection, but the site itself is not an onion service."
 
 ## Purge integration — the three triggers, adapted
 
-| Trigger | Ghost behavior | Vault behavior |
-|---|---|---|
-| Panic wipe | hard wipe + kill | probabilistic overwrite + unlink **`notes.gve` + `.bak` + `.tmp`**, wipe passphrase, kill — flash caveat applies |
-| Screen off / device lock | purge RAM session | re-lock: drop plaintext + passphrase from RAM (bounded 2 s write-hold exception), keep encrypted files |
-| App exit | purge | same re-lock |
+| Trigger                  | Ghost behavior    | Vault behavior                                                                                                   |
+| ------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Panic wipe               | hard wipe + kill  | probabilistic overwrite + unlink **`notes.gve` + `.bak` + `.tmp`**, wipe passphrase, kill — flash caveat applies |
+| Screen off / device lock | purge RAM session | re-lock: drop plaintext + passphrase from RAM (bounded 2 s write-hold exception), keep encrypted files           |
+| App exit                 | purge             | same re-lock                                                                                                     |
 
 Panic = total loss default. **Opt-out triple-gated**: warning dialog at
 enable + persistent panic-screen indicator + re-confirm after every update.
@@ -259,7 +261,7 @@ the detail screen.
    bundled `.so`/JNI — the app's first native dependency: real supply-
    chain surface (ABI bundling, signing, native auditability). If that
    cost is paid once, spend it on **Argon2id** — memory-hard, closes the
-   GPU attack surface, buys security *and* speed — not on merely faster
+   GPU attack surface, buys security _and_ speed — not on merely faster
    PBKDF2 (convenience only). Library choice (BoringSSL, minimal impl,
    `argon2kt`) is part of the decision; measured numbers, not assumed.
 8. **Clipboard-history residual** — OEM clipboard history persists
@@ -294,14 +296,14 @@ is fully neutral.
 1. Passphrase cache: session `char[]`, zeroed on triggers; in-flight write
    bounded 2 s hold; cold-share re-prompt (whitelisted).
 2. Duress/decoy: v1.1. 3. `source`: best-effort, preserved on import.
-4. Naming: `com.plain.notes`, localized "Notes" — decided, built. 5. Clipboard: warn + manual.
-6. Panic opt-out: triple-gated. 7. Corruption: atomic dance + `.bak` +
+3. Naming: `com.plain.notes`, localized "Notes" — decided, built. 5. Clipboard: warn + manual.
+4. Panic opt-out: triple-gated. 7. Corruption: atomic dance + `.bak` +
    honest terminal state (no salvage promise — chunked = v1.1.5).
-8. Flash: probabilistic overwrite, no physical-destruction claim.
-9. Receiver: whitelist + user extension + notification on reject + lock +
+5. Flash: probabilistic overwrite, no physical-destruction claim.
+6. Receiver: whitelist + user extension + notification on reject + lock +
    rate limit + defined screen-off semantics + cap-reject notification +
    ENOSPC notification.
-10. Interop: export emits case-file payload; verified as test gate.
+7. Interop: export emits case-file payload; verified as test gate.
 
 ## §Build deltas — v1 as shipped vs frozen concept (2026-10-30)
 

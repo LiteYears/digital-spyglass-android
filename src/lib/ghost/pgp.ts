@@ -23,7 +23,7 @@ export type PgpEnrichment = {
   crossHost: boolean;
   /** Parse failure reason for malformed armor (honest display, no throw). */
   error?: string;
-}
+};
 
 export function normalizePgpBlock(value: string): string {
   return value.replace(/\r\n/g, "\n").trim();
@@ -91,13 +91,12 @@ export async function enrichPgpEntities(rows: PgpSourceRow[]): Promise<Map<strin
           error: "unparsable key block",
         };
       } else {
-        entry =
-          byFingerprint.get(fingerprint) ?? {
-            fingerprint,
-            keyIdShort: fingerprint.slice(-16).toUpperCase(),
-            hosts: [],
-            crossHost: false,
-          };
+        entry = byFingerprint.get(fingerprint) ?? {
+          fingerprint,
+          keyIdShort: fingerprint.slice(-16).toUpperCase(),
+          hosts: [],
+          crossHost: false,
+        };
         byFingerprint.set(fingerprint, entry);
       }
       const host = hostOf(row.url);
@@ -112,5 +111,8 @@ export async function enrichPgpEntities(rows: PgpSourceRow[]): Promise<Map<strin
 /** Display form of a fingerprint: uppercase hex grouped in fours. */
 export function formatFingerprint(fingerprint: string): string {
   if (fingerprint.length === 0) return "—";
-  return fingerprint.toUpperCase().replace(/(.{4})/g, "$1 ").trim();
+  return fingerprint
+    .toUpperCase()
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
 }

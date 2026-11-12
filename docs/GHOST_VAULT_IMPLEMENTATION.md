@@ -1,25 +1,26 @@
 # Ghost Vault — Implementation & Security Spec
+
 **Version:** working tree @ 2026-10-30 (uncommitted) · **Status:** device-verified on SM-G998B (Android 14)
 **Audience:** external code/security review. **Repo:** `D:\MCP Mods\ghost-vault` (private; neutral name `plain-notes` by design)
-**Frozen concept:** `docs/GHOST_VAULT_CONCEPT.md` v0.6 — this document describes what was *built*, verified, and where it deviates from the concept.
+**Frozen concept:** `docs/GHOST_VAULT_CONCEPT.md` v0.6 — this document describes what was _built_, verified, and where it deviates from the concept.
 
 ---
 
 ## 1. Purpose
 
-Encrypted-at-rest companion app for an onion-search ecosystem. The sibling search app ("Ghost") is deliberately RAM-only (zero persistence). This app provides the *controlled* persistence half: an AES-256-GCM vault for onion links, clearnet links, and notes, received via Android share intents or manual entry — with the same purge discipline.
+Encrypted-at-rest companion app for an onion-search ecosystem. The sibling search app ("Ghost") is deliberately RAM-only (zero persistence). This app provides the _controlled_ persistence half: an AES-256-GCM vault for onion links, clearnet links, and notes, received via Android share intents or manual entry — with the same purge discipline.
 
 **Identity:** package `com.plain.notes`, launcher label "Notes"/"Notizen", generic notepad icon. No ecosystem branding on-device. This is a deliberate camouflage posture, not a limitation.
 
 ## 2. Hard Boundaries (what the app provably cannot do)
 
-| Boundary | Mechanism | Verified |
-|---|---|---|
-| No network | Zero `INTERNET` (and no other network permission) in manifest — transmission is impossible at OS level | `aapt dump badging` |
-| Only runtime permission | `POST_NOTIFICATIONS` | `aapt` |
-| No cloud/device backup | `allowBackup=false`, `fullBackupContent=false`, `dataExtractionRules` excludes `root`/`path="."` for cloud-backup, device-transfer, direct-transfer | **`bmgr backupnow` refused on-device** ("Backup is not allowed") + manifest/xml |
-| No screenshots / recents preview | `FLAG_SECURE` on MainActivity **and** receive dialogs (dialog windows secured explicitly — flag does not propagate) | black screencap on-device |
-| Links open only in Tor Browser | `openUrl` hardcodes `org.torproject.torbrowser{,_alpha,_nightly}` via `setPackage`; never default browser | code path |
+| Boundary                         | Mechanism                                                                                                                                           | Verified                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| No network                       | Zero `INTERNET` (and no other network permission) in manifest — transmission is impossible at OS level                                              | `aapt dump badging`                                                             |
+| Only runtime permission          | `POST_NOTIFICATIONS`                                                                                                                                | `aapt`                                                                          |
+| No cloud/device backup           | `allowBackup=false`, `fullBackupContent=false`, `dataExtractionRules` excludes `root`/`path="."` for cloud-backup, device-transfer, direct-transfer | **`bmgr backupnow` refused on-device** ("Backup is not allowed") + manifest/xml |
+| No screenshots / recents preview | `FLAG_SECURE` on MainActivity **and** receive dialogs (dialog windows secured explicitly — flag does not propagate)                                 | black screencap on-device                                                       |
+| Links open only in Tor Browser   | `openUrl` hardcodes `org.torproject.torbrowser{,_alpha,_nightly}` via `setPackage`; never default browser                                           | code path                                                                       |
 
 **Claim boundary on `FLAG_SECURE`:** it blocks OS-level screenshots and the
 Recents preview for casual attackers and shoulder-surfers. It does **not**
@@ -78,9 +79,9 @@ multi-minute derive — an executor DoS that also delays a queued `panicWipe`.
 **Store payload** inside ciphertext: `{storeFormat:"notes-store-v1", items:[...]}`
 **Item:** `{url, title?, note?, tags[], addedAt, source}`
 
-Decrypt enforces format/kdf/cipher string equality before attempting GCM (mismatch → `SecurityException`). GCM auth failure is *all-or-nothing*: no partial salvage, and the UI honestly says "wrong passphrase OR damaged" (they are indistinguishable).
+Decrypt enforces format/kdf/cipher string equality before attempting GCM (mismatch → `SecurityException`). GCM auth failure is _all-or-nothing_: no partial salvage, and the UI honestly says "wrong passphrase OR damaged" (they are indistinguishable).
 
-**Passphrase handling:** minimum **12 chars**, held as `char[] sessionPass` in RAM while unlocked, `Arrays.fill` zeroing on lock — best-effort under ART (**verified by reflection assertion**: the live `char[]` is all-zeros after lock, `sessionPassZeroedOnLock`; a `String`→`char[]` copy inside `derive(String)` remains a known non-zeroable artifact). KDF key is re-derived from the stored salt on *every* write — the key itself is not retained.
+**Passphrase handling:** minimum **12 chars**, held as `char[] sessionPass` in RAM while unlocked, `Arrays.fill` zeroing on lock — best-effort under ART (**verified by reflection assertion**: the live `char[]` is all-zeros after lock, `sessionPassZeroedOnLock`; a `String`→`char[]` copy inside `derive(String)` remains a known non-zeroable artifact). KDF key is re-derived from the stored salt on _every_ write — the key itself is not retained.
 
 ## 3a. Concurrency model — single-thread executor (structural, not monitor-based)
 
@@ -92,10 +93,11 @@ update, delete, import, panic, every `writeAll`. This replaced an earlier
 key — unrecoverable on next unlock.
 
 Semantics now:
+
 - `lock()` flips `unlocked=false` **synchronously** (new writes rejected
   instantly) and enqueues the zeroing behind in-flight work — never blocks,
   safe on the main thread (screen-off receiver). **Deviation from concept:**
-  the spec's "abort after ~2 s" became *hold-to-completion* — the queued write
+  the spec's "abort after ~2 s" became _hold-to-completion_ — the queued write
   finishes cleanly, then the lock runs. Bound = queue depth, not a timer.
   Hold wins over abort: no data loss, deterministic end state.
 - `panicWipe` runs `submit().get()` on the caller thread (panic responder
@@ -118,16 +120,16 @@ Semantics now:
 settings toggle.** Mechanism:
 
 - AES-256-GCM KEK `ghostvault_kek_v1` in AndroidKeyStore, `setUserAuthenticationRequired(true)`
-  + `AUTH_BIOMETRIC_STRONG` (per-use auth, no validity window),
-  `setInvalidatedByBiometricEnrollment(true)`, `setIsStrongBoxBacked(true)`
-  when `FEATURE_STRONGBOX_KEYSTORE` is present (SM-G998B: **yes**), TEE
-  fallback otherwise.
+  - `AUTH_BIOMETRIC_STRONG` (per-use auth, no validity window),
+    `setInvalidatedByBiometricEnrollment(true)`, `setIsStrongBoxBacked(true)`
+    when `FEATURE_STRONGBOX_KEYSTORE` is present (SM-G998B: **yes**), TEE
+    fallback otherwise.
 - Enrollment wraps the live session passphrase (GCM, iv(12)||ct) into
   `files/notes.keywrap`; unlock reverses it through
   `BiometricPrompt` + `CryptoObject` (crypto-bound auth — a faked callback
   cannot release the key, per MASTG).
-- **Trust-model change, stated:** enabling this creates a *credential at
-  rest* (the wrapped passphrase). The default passphrase-only design holds
+- **Trust-model change, stated:** enabling this creates a _credential at
+  rest_ (the wrapped passphrase). The default passphrase-only design holds
   no persistent credential. The wrap file is useless without the Keystore
   key, the key is useless without a live biometric, and a new biometric
   enrollment invalidates the key → wrap file unrecoverable (fail-closed:
@@ -142,7 +144,7 @@ settings toggle.** Mechanism:
   fingerprint invalidates the KEK — but the live session does not depend
   on it. `sessionPass` is in RAM, `writeAll` never touches the Keystore,
   so an in-flight write completes unaffected and the session survives —
-  correct semantics: invalidation kills the *persisted* credential, not
+  correct semantics: invalidation kills the _persisted_ credential, not
   the live session. Next `unlockBiometric` →
   `KeyPermanentlyInvalidatedException` → `disable()` → passphrase path
   → re-enroll. Residual, stated: an attacker with unlocked-app access
@@ -162,6 +164,7 @@ settings toggle.** Mechanism:
 `files/notes.gve` (primary), `notes.gve.bak` (backup), `notes.gve.tmp` (staging).
 
 **Write dance** (`writeAll`, on the single VAULT executor thread — see §3a):
+
 1. Fresh salt → derive → encrypt → write `tmp` → `getFD().sync()`
 2. rename `gve → bak` (if gve exists)
 3. rename `tmp → gve`
@@ -199,7 +202,7 @@ rejects over-cap shares with notification "Store full — open Vault to manage"
 (device-verified); UI shows an inline capacity warning at ≥10k and never
 hard-rejects the UI path. Write latency at the boundary: ~1.6 s (measured).
 
-**Known design limitation (documented, not a bug):** shares routed through the system chooser expose the *resolver* as referrer, not the real sender — sender verification is impossible for chooser shares → they always take the notification path. Only direct (non-chooser) shares can trigger the cold-path prompt. Verified live with a real Tor Browser share.
+**Known design limitation (documented, not a bug):** shares routed through the system chooser expose the _resolver_ as referrer, not the real sender — sender verification is impossible for chooser shares → they always take the notification path. Only direct (non-chooser) shares can trigger the cold-path prompt. Verified live with a real Tor Browser share.
 
 ## 6. Whitelist model
 
@@ -212,28 +215,29 @@ hard-rejects the UI path. Write latency at the boundary: ~1.6 s (measured).
 
 **Export** (`exportToFile` → `ACTION_CREATE_DOCUMENT`): writes a fresh `secure-export-v1` envelope whose plaintext payload is a **`case-file-v1` case file** — onion items become `onion` entities (`value`=host, `urls=[http URL]`, `detail`=note/title, `updatedAt` clamped ≤ now, capped at 500 entities) plus a `noteItems` array carrying every item losslessly. Encrypted under the session passphrase, fresh salt/IV. Verified: the decrypted payload passes the sibling app's strict `parseCaseFile` schema validation; unknown keys are tolerated, forbidden keys rejected.
 
-**Import** (`pickImportFile` → `ACTION_OPEN_DOCUMENT` → text, 4 MiB cap): `importEnvelope` requires the encrypted outer envelope (plaintext case files are rejected — imports must be encrypted). Decrypts under the *envelope's own* passphrase (may differ from session). Payload dispatch: `notes-store-v1` → `items`; `case-file-v1` → `noteItems` preferred, `entities` fallback.
+**Import** (`pickImportFile` → `ACTION_OPEN_DOCUMENT` → text, 4 MiB cap): `importEnvelope` requires the encrypted outer envelope (plaintext case files are rejected — imports must be encrypted). Decrypts under the _envelope's own_ passphrase (may differ from session). Payload dispatch: `notes-store-v1` → `items`; `case-file-v1` → `noteItems` preferred, `entities` fallback.
 
 **Input hardening on import:**
+
 - `normalizeItem` copies field-by-field (url required, ≤2048 chars; addedAt clamped to ≤now; source defaults `saf-import`) — imported JSON is treated as untrusted despite GCM auth.
 - `entityToItem` accepts only `type:"onion"` entities and re-validates the onion pattern against the final URL — malformed entities cannot inject arbitrary strings as URLs.
 - **Dedup:** `(url, addedAt)` pair already present → skipped (idempotent re-import: "imported 0 item(s)" on repeat). Same URL at different times = legitimately distinct.
 
 ## 8. Lock, panic, and lifecycle
 
-| Trigger | Effect |
-|---|---|
-| Screen off | `NoteStore.lock()` + clipboard cleared + pending share dropped + `vaultLocked` event → WebView drops session state |
-| App destroy | `NoteStore.lock()` |
-| Manual "lock now" | same as screen-off |
-| **Panic button** (settings) | **Native-dialog-gated nonce:** the JS tap only requests the arm — `armPanic` opens a **native AlertDialog outside the WebView** (FLAG_SECURE'd; dialog windows do not inherit), and the armed 16-byte nonce (30 s TTL, single-use, cleared on lock) is issued **only by a physical tap on DESTROY** — a gesture bundled JS cannot forge.
-`armPanic` is additionally rate-limited: one dialog per **30 s**
-(`armCooldownMs`) and never while a dialog is pending — a hostile JS
-loop cannot banner-fatigue the user into an accidental DESTROY tap. The resolved nonce feeds `panicWipe` → 3-pass `SecureRandom` overwrite of gve/bak/tmp **+ `notes.keywrap`** → delete → `BiometricUnlock.disable()` (drops the keystore alias — panic is total loss, the opt-in credential must not survive) → lock → `killProcess`. This replaces the earlier UI-flag two-stage gate: stronger (user-gesture-bound at OS level) and simpler. |
-| **PanicKit TRIGGER** (`PanicResponderActivity`, exported) | same wipe — **single-stage by design** (that is the point of an external panic trigger; asymmetry vs the in-app two-stage gate is intentional and documented here). **Signature-pinned referrer gate** (PanicKit spec: trusted sender "pinned or TOFUed"; package name alone is spoofable by a same-named app signed by another key): referrer must be `info.guardianproject.ripple` **and** its installed signing-cert SHA-256 must match a pinned digest — Guardian Project's 4096-bit release key `f006a204…` (official signing-keys page, SHA-1 `4CB3F539…` cross-verified) or the F-Droid build signature `927f7e38…` (observed on f-droid.org 0.3.2) — **or** a user-configured `panic_sender` pref in `package:sha256cert` form (bare-package form accepted but documented weaker), **or** `com.android.shell` on **`BuildConfig.DEBUG`** builds only (adb test path, compile-time stripped in release). Verified on-device: real Ripple panic wave → wipe. |
-| Wrong-passphrase | retry loop, no lockout, honest error |
+| Trigger                                                                                                                                                                                                                                                                                                                                                                                                                                          | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Screen off                                                                                                                                                                                                                                                                                                                                                                                                                                       | `NoteStore.lock()` + clipboard cleared + pending share dropped + `vaultLocked` event → WebView drops session state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| App destroy                                                                                                                                                                                                                                                                                                                                                                                                                                      | `NoteStore.lock()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Manual "lock now"                                                                                                                                                                                                                                                                                                                                                                                                                                | same as screen-off                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Panic button** (settings)                                                                                                                                                                                                                                                                                                                                                                                                                      | **Native-dialog-gated nonce:** the JS tap only requests the arm — `armPanic` opens a **native AlertDialog outside the WebView** (FLAG_SECURE'd; dialog windows do not inherit), and the armed 16-byte nonce (30 s TTL, single-use, cleared on lock) is issued **only by a physical tap on DESTROY** — a gesture bundled JS cannot forge.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `armPanic` is additionally rate-limited: one dialog per **30 s**                                                                                                                                                                                                                                                                                                                                                                                 |
+| (`armCooldownMs`) and never while a dialog is pending — a hostile JS                                                                                                                                                                                                                                                                                                                                                                             |
+| loop cannot banner-fatigue the user into an accidental DESTROY tap. The resolved nonce feeds `panicWipe` → 3-pass `SecureRandom` overwrite of gve/bak/tmp **+ `notes.keywrap`** → delete → `BiometricUnlock.disable()` (drops the keystore alias — panic is total loss, the opt-in credential must not survive) → lock → `killProcess`. This replaces the earlier UI-flag two-stage gate: stronger (user-gesture-bound at OS level) and simpler. |
+| **PanicKit TRIGGER** (`PanicResponderActivity`, exported)                                                                                                                                                                                                                                                                                                                                                                                        | same wipe — **single-stage by design** (that is the point of an external panic trigger; asymmetry vs the in-app two-stage gate is intentional and documented here). **Signature-pinned referrer gate** (PanicKit spec: trusted sender "pinned or TOFUed"; package name alone is spoofable by a same-named app signed by another key): referrer must be `info.guardianproject.ripple` **and** its installed signing-cert SHA-256 must match a pinned digest — Guardian Project's 4096-bit release key `f006a204…` (official signing-keys page, SHA-1 `4CB3F539…` cross-verified) or the F-Droid build signature `927f7e38…` (observed on f-droid.org 0.3.2) — **or** a user-configured `panic_sender` pref in `package:sha256cert` form (bare-package form accepted but documented weaker), **or** `com.android.shell` on **`BuildConfig.DEBUG`** builds only (adb test path, compile-time stripped in release). Verified on-device: real Ripple panic wave → wipe. |
+| Wrong-passphrase                                                                                                                                                                                                                                                                                                                                                                                                                                 | retry loop, no lockout, honest error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
-**Honest claim boundary:** panic performs *logical* overwrite of file extents; physical flash-block destruction is not claimed (wear-leveling) — UI text says so verbatim and points to OS-level data-wipe for hardware removal.
+**Honest claim boundary:** panic performs _logical_ overwrite of file extents; physical flash-block destruction is not claimed (wear-leveling) — UI text says so verbatim and points to OS-level data-wipe for hardware removal.
 
 ## 9. WebView surface + JS→native bridge boundary
 
@@ -259,7 +263,7 @@ solely by stock `BridgeActivity`, and `MainActivity` only registers the
 plugin and sets `FLAG_SECURE`. `webContentsDebuggingEnabled: false`,
 `allowMixedContent: false`.
 
-**Runtime pinning (CVE-2026-103922):** the app-code audit alone is *not*
+**Runtime pinning (CVE-2026-103922):** the app-code audit alone is _not_
 sufficient — Capacitor versions < 6.2.2/7.6.9/8.3.5/8.4.3/8.5.1 serve the
 internal proxy path `/_capacitor_http_interceptor_` under the app origin,
 letting a clicked link smuggle remote content into the bridge's origin
@@ -272,23 +276,23 @@ regression cannot silently reopen the remote-content path. Upgrade path:
 if Capacitor is bumped, the pin check belongs in review, not just
 `bun.lock` diff.
 
-| Method | Unlocked-gate | Notes |
-|---|---|---|
-| `unlock` `lock` `isUnlocked` `acceptPendingShare` | n/a | session ops |
-| `armPanic` → `panicWipe` | n/a | **user-gesture-gated nonce + rate limit**: `armPanic` shows a **native** AlertDialog — the 16-byte nonce (30 s TTL, single-use, cleared on lock) exists only if the user physically taps DESTROY. Arm calls are bounded to **one dialog per 30 s** (`armCooldownMs`, `armDialogPending` guard) — a hostile JS loop cannot spam-fatigue the user into an accidental DESTROY. PanicKit responder path bypasses the bridge and stays unconditional (§8 asymmetry). |
-| `getItems` `addItem` `updateItem` `deleteItem` `importEnvelope` `exportEnvelope` | yes — store layer returns empty/false when locked | |
-| `exportToFile` `pickImportFile` `openUrl` `addToWhitelist` `removeFromWhitelist` | yes — explicit `isUnlocked()` check in plugin | mutation prefs gated: whitelist cannot change while locked |
-| `listShareCandidates` `getWhitelist` | no (metadata only) | read-only, no vault data |
-| `biometricStatus` | no (metadata only) | hardware/enabled flags, no vault data |
-| `enableBiometric` `disableBiometric` | yes (enable requires live `sessionPassCopy`) | KEK wrap lifecycle, §3b |
-| `unlockBiometric` | n/a — unlock path | BiometricPrompt + CryptoObject → `NoteStore.unlock` |
+| Method                                                                           | Unlocked-gate                                     | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unlock` `lock` `isUnlocked` `acceptPendingShare`                                | n/a                                               | session ops                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `armPanic` → `panicWipe`                                                         | n/a                                               | **user-gesture-gated nonce + rate limit**: `armPanic` shows a **native** AlertDialog — the 16-byte nonce (30 s TTL, single-use, cleared on lock) exists only if the user physically taps DESTROY. Arm calls are bounded to **one dialog per 30 s** (`armCooldownMs`, `armDialogPending` guard) — a hostile JS loop cannot spam-fatigue the user into an accidental DESTROY. PanicKit responder path bypasses the bridge and stays unconditional (§8 asymmetry). |
+| `getItems` `addItem` `updateItem` `deleteItem` `importEnvelope` `exportEnvelope` | yes — store layer returns empty/false when locked |                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `exportToFile` `pickImportFile` `openUrl` `addToWhitelist` `removeFromWhitelist` | yes — explicit `isUnlocked()` check in plugin     | mutation prefs gated: whitelist cannot change while locked                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `listShareCandidates` `getWhitelist`                                             | no (metadata only)                                | read-only, no vault data                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `biometricStatus`                                                                | no (metadata only)                                | hardware/enabled flags, no vault data                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `enableBiometric` `disableBiometric`                                             | yes (enable requires live `sessionPassCopy`)      | KEK wrap lifecycle, §3b                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `unlockBiometric`                                                                | n/a — unlock path                                 | BiometricPrompt + CryptoObject → `NoteStore.unlock`                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 Residual exposure, stated plainly:
 
 - **JS `panicWipe` now requires a physical user gesture.** `armPanic`
   issues its nonce only from a **native** AlertDialog confirm — a window
   the WebView cannot render or tap. A compromised JS bundle can still
-  *spam* armed dialogs (annoyance, bounded) but cannot wipe without a
+  _spam_ armed dialogs (annoyance, bounded) but cannot wipe without a
   human physically tapping DESTROY. This closes the earlier residual
   ("JS could call arm then wipe") for the UI path; supply-chain
   resilience still rests primarily on the local-origin invariant +
@@ -313,6 +317,7 @@ capacity warn, receiver reject "Store full — open Vault to manage");
 executor-serialized lock/unlock cycle clean.
 
 **Second hardening round (external net-research review):**
+
 - **PanicKit signature pinning** — verified live: real Ripple panic wave
   (F-Droid-signed `info.guardianproject.ripple`) → referrer gate → cert-pin
   match → wipe (files gone, process dead). Shell-trigger path also verified
@@ -339,6 +344,7 @@ executor-serialized lock/unlock cycle clean.
   on device.
 
 **Third hardening round (9.5-push, 2026-10-30):**
+
 - **PBKDF2 600k + 12-char floor live** — `derive()` `Log.d` measured
   **2,707 ms median** on SM-G998B (n=10); all 8 instrumented tests re-ran
   against 600k envelopes.
@@ -346,7 +352,7 @@ executor-serialized lock/unlock cycle clean.
   → native AlertDialog (FLAG_SECURE'd) → DESTROY tap issues a 16-byte
   SecureRandom nonce (30 s TTL, single-use, cleared on lock); JS
   `panicWipe` rejects without it. Instrumented: `panicNonceSingleUseAnd
-  Gated` + `panicNonceExpires` green. PanicKit path unchanged
+Gated` + `panicNonceExpires` green. PanicKit path unchanged
   (unconditional, §8 asymmetry).
 - **Fault harness** — `FileOps` seam + on-device instrumented suite; found
   and fixed a real bug (in-memory phantom item on failed write, now rolled
@@ -357,6 +363,7 @@ executor-serialized lock/unlock cycle clean.
   fingerprint unlock, derive logged; §3b).
 
 **Fourth round (adversarial-review follow-up, 2026-10-30):**
+
 - **Provider verified, not assumed:** `derive()` logs `provider=` —
   resolves to **`BC` (BouncyCastle pure-Java)** on this device, the
   source of the ~2.7 s artifact (§3 correction).
@@ -365,7 +372,7 @@ executor-serialized lock/unlock cycle clean.
   `deleteInternal` (`items` swapped before `writeAll`). Both now roll
   back on write failure — RAM always equals last durable state; two new
   ENOSPC instrumented tests prove it (`failedWriteRollsBackUpdate/
-  DeleteInMemory`).
+DeleteInMemory`).
 - **Dialog-spam bound:** `armPanic` rate-limited (30 s cooldown +
   pending-dialog guard), `armPanicIsRateLimited` instrumented.
 - **Import-DoS measured:** 999,999-iteration envelope → derive ran,
@@ -386,15 +393,15 @@ executor-serialized lock/unlock cycle clean.
    earlier UI-flag two-stage: the arm is issued by a **native dialog**
    outside the WebView (physical tap unforgeable by JS), see §8.
    Asymmetry to single-stage PanicKit trigger documented in §8.
-3. ~~screen-off write hold~~ **done** as executor *hold-to-completion*
+3. ~~screen-off write hold~~ **done** as executor _hold-to-completion_
    (deviation from concept's "abort" — deliberate, see §3a).
 4. ~~crash-point injection + mock-FS + zeroing + ENOSPC~~ **done 2026-10-30:**
    `FileOps` seam wraps every durable file op in `NoteStore`
    (exists/openRead/openWrite/rename/delete/syncDir); 8 instrumented tests
    on SM-G998B, all green — `sessionPassZeroedOnLock` (reflection asserts
    the live `char[]` is zeroed, not just nulled), `crashBetweenRenames_
-   restoresBackup` (gve deleted → bak previous-good restored), `enospcWrite
-   FailsClosed` (injected write fault → append false + in-memory rollback —
+restoresBackup` (gve deleted → bak previous-good restored), `enospcWrite
+FailsClosed` (injected write fault → append false + in-memory rollback —
    a real bug found by the test: `items.put` ran before `writeAll`, phantom
    entry now rolled back), `panicNonce*` (gating, single-use, TTL expiry),
    `shortPassphraseRejected`, `biometricHardware*`.
@@ -409,13 +416,13 @@ executor-serialized lock/unlock cycle clean.
    on-device fake-package test (would require building a same-named
    trojan APK). Stated honestly rather than claimed tested.
 8. **Android 15 forward-compat — checked, clean:** Android 15 can block
-   *mutable implicit* `PendingIntent`s (`BLOCK_MUTABLE_IMPLICIT_PENDING_INTENTS`
+   _mutable implicit_ `PendingIntent`s (`BLOCK_MUTABLE_IMPLICIT_PENDING_INTENTS`
    opt-in). Our notification `contentIntent` is **explicit**
    (`new Intent(ctx, MainActivity.class)`) **and immutable**
    (`FLAG_IMMUTABLE`) — neither condition applies, so the notification
    path is Android-15-safe by construction. No code change; verified
    against `ShareReceiveActivity.java:236-239`, not assumed.
-9. **System clipboard *history* is out of reach:** lock clears the active
+9. **System clipboard _history_ is out of reach:** lock clears the active
    clip; Samsung/Gboard clipboard history is a separate system store no
    SDK API touches. UI now warns the user to empty it manually —
    residual stated, not claimed solvable.
@@ -443,6 +450,7 @@ crash→bak restore, ENOSPC rollback (§11.4); opt-in StrongBox/TEE biometric
 KEK wrap (§3b).
 
 **Still worth scrutiny:**
+
 - Notification `contentIntent` carries share text in a system-held
   PendingIntent extra (not displayed) — chooser-referrer limitation; TTL
   bounds it, does not remove it.
@@ -453,7 +461,7 @@ KEK wrap (§3b).
   restarting the activity manager-side bypasses it per-process; bounded
   impact (writes serialize through the executor).
 - `entityToItem` builds `http://` + value — validated against the onion
-  pattern *after* construction, so garbage values are dropped not stored.
+  pattern _after_ construction, so garbage values are dropped not stored.
 - Clipboard auto-clear on lock is a deliberate spec extension
   (concept had manual-only).
 - The 10-min pendingShare TTL is code-verified, not time-verified
