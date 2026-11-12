@@ -1,0 +1,8 @@
+v2.0.0
+
+• Clasificación Okapi BM25 con impulso por acuerdo multimotor
+• Aislamiento de flujos Tor SOCKS5 por motor para evitar la congestión de circuitos por motores lentos
+• Host y puerto Tor SOCKS5 configurables en los ajustes de Seguridad
+• Jitter opcional de temporización de tráfico y modo surge shaping
+• Filtrado de URL basura y extracción de entidades CVE/IPv4 en los resultados
+• Pantallas de control desplazables con safe-area insets para pantallas compactas

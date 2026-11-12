@@ -1,0 +1,11 @@
+v4.1.1 — Tor egress verification fix
+
+- Search now requires a real .onion probe through the configured SOCKS
+  endpoint, not just "some VPN tunnel is up". Any-VPN false-positive is
+  gone: with a non-Tor tunnel (or a dead Tor daemon after a network flap)
+  the gate stays honest instead of showing green while every engine
+  request fails.
+- Consent text corrected: a running Tor daemon (Orbot, SOCKS5 on
+  127.0.0.1:9050) is required — Orbot VPN mode is not.
+- Refreshed store screenshots.
+- Internal: removed ineffective dynamic imports; faster mobile build.

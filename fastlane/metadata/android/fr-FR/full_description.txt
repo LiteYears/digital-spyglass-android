@@ -1,0 +1,62 @@
+Ghost est un agrégateur de recherche onion pour Android qui place la confidentialité au premier plan. Il interroge 13 moteurs de recherche onion publics en parallèle, déduplique et classe les résultats, puis ouvre les liens en externe dans Tor Browser.
+
+FONCTIONNALITÉS
+
+• 13 moteurs de recherche onion interrogés en parallèle
+• Session en RAM uniquement — aucune requête, aucun résultat ni historique écrit sur disque
+• Trois déclencheurs de purge : effacement panique, verrouillage de l'écran, sortie de l'application
+• Verrou VPN — non dissipable, bloque les requêtes tant que le VPN Orbot n'est pas actif
+• Transport Tor SOCKS5 avec DNS distant via Tor
+• FLAG_SECURE — bloque les captures d'écran et les vignettes des applications récentes
+• Aucun backend, aucune télémétrie, aucun compte, aucune publicité
+• Bouton Stop pour annuler les recherches en cours
+• Contrôle de consentement avec vérification 18+, affiché à chaque session
+• Ouverture des liens externes dans Tor Browser
+
+CONFIDENTIALITÉ
+
+Aucune donnée n'est collectée, stockée ou transmise à un serveur. Les requêtes et résultats n'existent qu'en RAM pendant la session active. Seules trois préférences non sensibles persistent entre les sessions : sélection des moteurs, filtre d'extraits, exigence du VPN.
+
+L'application n'affiche jamais de HTML distant. Les liens s'ouvrent en externe dans Tor Browser via intent. Les captures d'écran et les aperçus d'applications récentes sont bloqués.
+
+PRÉREQUIS
+
+• Android 7.0+ (API 24)
+• Orbot en mode VPN (pour le transport Tor)
+• Tor Browser pour Android (pour ouvrir les liens de résultats)
+
+FONCTIONNEMENT
+
+1. Saisir une requête
+2. Ghost interroge 13 moteurs de recherche onion en parallèle via Tor
+3. Les résultats sont analysés, dédupliqués et classés
+4. Toucher un résultat pour l'ouvrir dans Tor Browser
+5. Au verrouillage de l'écran, à la sortie de l'application ou lors d'un effacement panique, toutes les données de session sont supprimées de la RAM
+
+À QUI S'ADRESSE CETTE APPLICATION
+
+Ghost est conçu pour les chercheurs, journalistes et personnes ayant besoin d'accéder à l'information dans des environnements restrictifs. C'est un outil d'intelligence open source (OSINT) légitime, de journalisme d'investigation, d'étude académique et de contournement de la censure. L'application s'adresse à des adultes qui assument la responsabilité personnelle de leurs activités de recherche.
+
+Le développeur maintient un ensemble d'outils de recherche OSINT et de sécurité. Ghost est l'extension mobile de cette chaîne d'outils.
+
+CAS D'USAGE
+
+• Journalisme et recherche d'investigation en environnements restrictifs
+• Recherche en sécurité et analyse OSINT
+• Étude académique des services onion et du contournement de la censure
+• Accès à l'information dans les régions à Internet restreint
+• Éducation à la vie privée et recherche sur les droits numériques
+
+OPEN SOURCE
+
+Sous licence GPL-3.0. Code source disponible pour un audit de sécurité indépendant :
+https://codeberg.org/sookoothaii/digital-spyglass-android
+
+Les autres projets de recherche OSINT du développeur sont disponibles publiquement :
+https://codeberg.org/sookoothaii
+
+AVERTISSEMENT
+
+Ceci est un outil de recherche. Les résultats proviennent de moteurs de recherche onion publics et ne sont pas filtrés. L'application n'héberge, ne produit ni ne cautionne aucun contenu. Les utilisateurs sont responsables du respect des lois locales.
+
+Le développeur n'est pas affilié à The Tor Project et n'exploite aucune infrastructure Tor.

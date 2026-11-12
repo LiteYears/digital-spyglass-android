@@ -1,0 +1,6 @@
+{
+  "scheme": "registry-sig-v1",
+  "algo": "RSA-PSS-SHA256",
+  "keyFingerprint": "0295bf53d9abe8621e41510cdc1bd8dcaf992745621a6bcff33eeb6f3f870106",
+  "signature": "DgnFeKRr1vmks+EWNmbwhZM/M6+jjZo3clDZtVKOs6dXXWwiD0OVPmbszi1jtjtJwArFJ4nkQDCxCoR7WRxmDetttNbKxNFIHQiHz9aV4EokKflcLC8oF3JlT37MvtLthP7sPmBEumrwOQhLCAKFcvexkQQRGbruFu3bfrfcnYwufJafI+wTx7dEw1CU3ODHEoIJjP9ybwvWi44j/bMpamA/8+bld5UpfKBEp2rn/h5atWIY1q171/P55vgNOu3B1V2fXrh+PNTDSv2Pn/29MLDPlEbT1AXqVPVhOWWLOH17aDY6AERdl/vlIcEQNdq1BIqkStO4A0oqMfxLjD3OIw=="
+}

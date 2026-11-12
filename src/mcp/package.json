@@ -1,0 +1,42 @@
+{
+  "name": "@ghost/search-mcp",
+  "version": "0.1.0",
+  "description": "Ghost Search MCP Server — anonymous Tor search infrastructure for AI agents and RAG systems",
+  "type": "module",
+  "main": "dist/mcp/server.js",
+  "bin": {
+    "ghost-search-mcp": "dist/mcp/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mcp/server.js",
+    "dev": "tsx src/mcp/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "socks": "^2.8.9",
+    "socks-proxy-agent": "^10.1.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.0"
+  },
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "mcp",
+    "tor",
+    "onion",
+    "search",
+    "rag",
+    "ai-agent",
+    "privacy",
+    "anonymous",
+    "dark-web",
+    "model-context-protocol"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

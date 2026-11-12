@@ -1,0 +1,8 @@
+v3.0.0
+
+• Reciprocal Rank Fusion ponderada por confianza (RRF k=10) + modificador de filtro de calidad
+• Contratos de consulta por motor (longitud, número de términos, normalización booleana/comillas)
+• Modo Fast 5 (5 motores Core + Refuerzo, ~60 % menos latencia de búsqueda)
+• Correlación de entidades entre dominios solo en RAM y exportación CSV/STIX 2.1
+• Corrección: lecturas de socket chunked keep-alive (TorDex) y decodificación UTF-8 de respuestas
+• Soporte de lista negra de hashes MD5 de Ahmia y endpoint de Torch actualizado

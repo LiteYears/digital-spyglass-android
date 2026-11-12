@@ -1,0 +1,1 @@
+Korrekturen aus einem externen Protokoll-Review: Suchanfragen mit Leerzeichen oder Nicht-ASCII-Zeichen werden nicht mehr doppelt encodiert, bevor sie die Engines erreichen; abgeschnittene Engine-Antworten erscheinen jetzt als Fehler statt als Teilresultate; 307/308-Redirects behalten POST im Same-Origin-Fall und werden Cross-Host abgelehnt, wenn sie einen Request-Body mitführen.

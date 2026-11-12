@@ -1,0 +1,8 @@
+v3.0.0
+
+• Reciprocal Rank Fusion pondérée par confiance (RRF k=10) + modificateur de filtre qualité
+• Contrats de requête par moteur (longueur, nombre de termes, normalisation booléens/guillemets)
+• Mode Fast 5 (5 moteurs Core + Renfort, ~60 % de latence de recherche en moins)
+• Corrélation d'entités inter-domaines en RAM et export CSV/STIX 2.1
+• Correction : lectures socket chunked keep-alive (TorDex) et décodage UTF-8 des réponses
+• Prise en charge de la liste noire MD5 d'Ahmia et endpoint Torch mis à jour

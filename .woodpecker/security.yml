@@ -1,0 +1,23 @@
+# Security gate (Codeberg CI; inert until enabled on the repo)
+# Runs the Level-3 evidence gates on every push to main.
+
+steps:
+  js-gate:
+    image: oven/bun:1
+    commands:
+      - bun install --frozen-lockfile
+      - bun scripts/verify-registry.mjs
+      - bunx --bun tsc --noEmit
+      - bun run test:coverage
+
+  android-unit-tests:
+    image: mingc/android-build-box:latest
+    commands:
+      - bun install --frozen-lockfile || npm i -g bun && bun install --frozen-lockfile
+      - bun run build:mobile
+      - bunx cap sync android
+      - cd android && ./gradlew testReleaseUnitTest --no-daemon
+
+when:
+  branch: main
+  event: [push, pull_request, manual]

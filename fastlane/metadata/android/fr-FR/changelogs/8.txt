@@ -1,0 +1,4 @@
+v3.0.1
+
+• Icône de lancement personnalisée du projet Ghost (avant-plan/arrière-plan adaptatif + couche monochrome) sur toutes les densités mipmap
+• Écrans de démarrage sombres assortis (#0B0E14) sur les 11 densités portrait/paysage, remplaçant les visuels par défaut du framework

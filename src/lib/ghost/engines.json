@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "comment": "Engine registry — data, not code. Tokens: {base}, {q}, {page}, {start}. parser.type 'selectors' uses spec; 'custom' references a named strategy in engines.ts. prepare types: hidden_input | form_introspect | math_captcha. health.* is maintained by scripts/engine-healthcheck.mjs.",
+  "engines": [
+    {
+      "id": "ahmia",
+      "name": "Ahmia",
+      "trust": 3,
+      "clearnet": false,
+      "connectTimeoutMs": 30000,
+      "baseUrl": "http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion",
+      "searchUrl": "{base}/search/?q={q}",
+      "pagedUrl": "{base}/search/?q={q}&page={page}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            "li.result",
+            "ol.searchResults li",
+            ".result"
+          ],
+          "link": "h4 a",
+          "snippet": "p"
+        }
+      },
+      "prepare": {
+        "type": "hidden_input",
+        "page": "{base}/"
+      },
+      "queryContract": {
+        "maxQueryLength": 100,
+        "maxTerms": 10,
+        "matchMode": "majority",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Filtered index, onion front-end (clearnet is JS-only), most stable parser.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "torch",
+      "name": "Torch",
+      "trust": 2,
+      "clearnet": false,
+      "connectTimeoutMs": 40000,
+      "baseUrl": "http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion",
+      "searchUrl": "{base}/cgi-bin/omega/omega?P={q}&DEFAULTOP=and",
+      "pagedUrl": "{base}/cgi-bin/omega/omega?P={q}&DEFAULTOP=and&START={start}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            "table tr",
+            "div.result",
+            "dl.searchResults dt"
+          ],
+          "link": "td b a",
+          "snippet": "td small, p, dd"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 200,
+        "maxTerms": 15,
+        "matchMode": "all",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Large unfiltered index (3.6M+ docs). Classic Omega CGI interface.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "tordex",
+      "name": "TorDex",
+      "trust": 2,
+      "clearnet": false,
+      "baseUrl": "http://tordexu73joywapk2txdr54jed4imqledpcvcuf75qsas2gwdgksvnyd.onion",
+      "searchUrl": "{base}/search?query={q}&page={page}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            ".result",
+            "div.card",
+            "li"
+          ],
+          "snippet": "p, .description"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 80,
+        "maxTerms": 8,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "CSS-selector scraping, moderate coverage.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "tor66",
+      "name": "Tor66",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://tor66sewebgixwhcqfnp5inzp5x5uohhdy3kvtnyfxc2e5mxiuh34iid.onion",
+      "searchUrl": "{base}/search?q={q}&o={page}",
+      "fallbackUrl": "{base}/search?q={q}",
+      "parser": {
+        "type": "custom",
+        "name": "tor66"
+      },
+      "prepare": {
+        "type": "form_introspect",
+        "page": "{base}/"
+      },
+      "queryContract": {
+        "maxQueryLength": 120,
+        "maxTerms": 10,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Large index, often online when others are down.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "onionland",
+      "name": "OnionLand",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://3bbad7fauom4d6sgppalyqddsqbf5u5p56b5k5uk2zxsy3d6ey2jobad.onion",
+      "searchUrl": "{base}/search?q={q}&page={page}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            ".result",
+            ".search-result",
+            "li"
+          ],
+          "snippet": ".description, p"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 200,
+        "maxTerms": 15,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Ad-heavy result pages; links are unwrapped from redirects.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "excavator",
+      "name": "Excavator",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://2fd6cemt4gmccflhm6imvdfvli3nf7zn6rfrwpsy7uhxrgbypvwf5fad.onion",
+      "searchUrl": "{base}/search?query={q}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            "div.mx-auto",
+            ".result",
+            ".search-result",
+            "li"
+          ],
+          "link": "h6 a, a",
+          "snippet": "p.text-truncate, p, .description, .snippet"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 150,
+        "maxTerms": 12,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "General onion network index, verified live 2026-Q1.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "amnesia",
+      "name": "Amnesia",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://amnesia7u5odx5xbwtpnqk3edybgud5bmiagu75bnqx2crntw5kry7ad.onion",
+      "searchUrl": "{base}/search?query={q}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            "div.results",
+            ".result",
+            "li.result"
+          ],
+          "link": "h2 a",
+          "snippet": "p.site_desc, .snippet, p, .description"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 120,
+        "maxTerms": 10,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Verified live 2026-Q1, clean interface.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "deepsearches",
+      "name": "TheDeepSearches",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://searchgf7gdtauh7bhnbyed4ivxqmuoat3nm6zfrg3ymkq6mtnpye3ad.onion",
+      "searchUrl": "{base}/search?q={q}",
+      "parser": {
+        "type": "custom",
+        "name": "deepsearches"
+      },
+      "queryContract": {
+        "maxQueryLength": 100,
+        "maxTerms": 10,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Verified live 2026-Q1. Organic results only (ads filtered).",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "torland",
+      "name": "Torland",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://torlbmqwtudkorme6prgfpmsnile7ug2zm4u3ejpcncxuhpu4k2j4kyd.onion",
+      "searchUrl": "{base}/index.php?a=search&q={q}",
+      "parser": {
+        "type": "selectors",
+        "spec": {
+          "blocks": [
+            "div.rezultat",
+            ".result",
+            ".search-result",
+            "li"
+          ],
+          "link": "h3 a",
+          "snippet": "cite, .description, p, .snippet"
+        }
+      },
+      "queryContract": {
+        "maxQueryLength": 100,
+        "maxTerms": 8,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Verified live 2026-Q1 (SICRY).",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "onionway",
+      "name": "Onionway",
+      "trust": 1,
+      "clearnet": false,
+      "connectTimeoutMs": 30000,
+      "baseUrl": "http://oniwayzz74cv2puhsgx4dpjwieww4wdphsydqvf5q7eyz4myjvyw26ad.onion",
+      "searchUrl": "{base}/search.php?s={q}",
+      "parser": {
+        "type": "custom",
+        "name": "onionway"
+      },
+      "queryContract": {
+        "maxQueryLength": 120,
+        "maxTerms": 10,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Verified live 2026-Q1 (SICRY).",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "oss",
+      "name": "OSS",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://3fzh7yuupdfyjhwt3ugzqqof6ulbcl27ecev33knxe3u7goi3vfn2qqd.onion",
+      "searchUrl": "{base}/oss/index.php?search={q}",
+      "parser": {
+        "type": "custom",
+        "name": "oss"
+      },
+      "prepare": {
+        "type": "math_captcha",
+        "page": "{searchUrl}",
+        "postUrl": "{base}/oss/index.php",
+        "body": "captcha_answer={answer}"
+      },
+      "queryContract": {
+        "maxQueryLength": 100,
+        "maxTerms": 8,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "OnionSearchServer, verified live 2026-Q1 (SICRY). Math captcha (POST).",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "notevil",
+      "name": "Not Evil",
+      "trust": 1,
+      "clearnet": false,
+      "baseUrl": "http://notevilugs2d6juvkm4nkfd635tynfmh2vshxzbpr5y4emczdufcubqd.onion",
+      "searchUrl": "{base}/index.php?q={q}",
+      "parser": {
+        "type": "custom",
+        "name": "notevil"
+      },
+      "queryContract": {
+        "maxQueryLength": 120,
+        "maxTerms": 10,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Pure HTML/PHP, no JS, no tracking. Community-polished index.",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    },
+    {
+      "id": "torgle",
+      "name": "Torgle",
+      "trust": 2,
+      "clearnet": false,
+      "baseUrl": "http://iy3544gmoeclh5de6gez2256v6pjh4omhpqdh2wpeeppjtvqmjhkfwad.onion",
+      "searchUrl": "{base}/torgle/?query={q}",
+      "parser": {
+        "type": "custom",
+        "name": "torgle"
+      },
+      "prepare": {
+        "type": "math_captcha",
+        "page": "{searchUrl}",
+        "postUrl": "{searchUrl}",
+        "body": "captcha={answer}&captcha_submit=OK",
+        "mathRe": "Solve this:\\s*(\\d+)\\s*\\+\\s*(\\d+)"
+      },
+      "queryContract": {
+        "maxQueryLength": 80,
+        "maxTerms": 6,
+        "matchMode": "any",
+        "booleanOperators": false,
+        "phraseQuotes": false
+      },
+      "note": "Ad-free gateway, no data storage. Math captcha (DDoS protection).",
+      "enabled": true,
+      "health": {
+        "status": "unknown",
+        "lastVerified": null,
+        "consecutiveFailures": 0
+      }
+    }
+  ],
+  "sequence": 1,
+  "previous": "sha256:d7de69dc058cf73a4ceb0cb02f00f5f8ef68f3e4d1f6a50fb84351a2e8639d0b"
+}

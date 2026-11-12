@@ -1,0 +1,1 @@
+Correcciones de una revisión externa del protocolo: las consultas con espacios o caracteres no ASCII ya no se codifican dos veces antes de llegar a los motores; las respuestas truncadas de los motores ahora se muestran como errores en lugar de resultados parciales; las redirecciones 307/308 conservan el POST same-origin y se rechazan cross-host cuando llevan cuerpo de petición.

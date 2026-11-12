@@ -1,0 +1,4 @@
+v3.0.1
+
+• Eigenes Ghost-Projekt-Launcher-Icon (adaptiver Vordergrund/Hintergrund + Monochrome-Layer) über alle mipmap-Dichten
+• Passende dunkle Splash-Screens (#0B0E14) über alle 11 Portrait-/Landscape-Dichten, ersetzen die Standard-Framework-Grafiken

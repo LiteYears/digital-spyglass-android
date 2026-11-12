@@ -1,0 +1,3 @@
+v3.0.2
+
+• Suppression des plugins Capacitor biométrie et stockage sécurisé inutilisés, afin que les permissions USE_BIOMETRIC et USE_FINGERPRINT ne soient plus demandées dans le manifest fusionné

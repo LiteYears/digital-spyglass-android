@@ -1,0 +1,7 @@
+Erstveröffentlichung v1.0.0
+
+• 13 Onion-Suchmaschinen werden parallel über Tor abgefragt
+• Session nur im RAM — keine Daten auf dem Datenträger
+• Panic-Wipe, Bildschirmsperre und App-Ende als Lösch-Auslöser
+• VPN-Gate — blockiert Suchanfragen, solange kein Orbot-VPN aktiv ist
+• Kein Backend, keine Telemetrie, keine Konten, keine Werbung

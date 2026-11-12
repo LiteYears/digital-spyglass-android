@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ghost Search</string>
+    <string name="title_activity_main">Ghost Search</string>
+    <string name="package_name">org.darknetcrawler.mobile</string>
+    <string name="custom_url_scheme">org.darknetcrawler.mobile</string>
+</resources>

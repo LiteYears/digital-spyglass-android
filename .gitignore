@@ -1,0 +1,89 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
+*.local
+
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# local certificate pins (never commit)
+cert-pins.json
+
+# Android signing secrets (never commit)
+android/keystore.properties
+android/key.properties
+android/app/release-keystore.jks
+android/app/*.jks
+
+# Machine-specific SDK path (never commit)
+android/local.properties
+
+# Release APK copies (uploaded via GitHub Releases, not committed)
+ghost-v*-release.apk
+*.apk
+!android/app/build/outputs/apk/**/*.apk
+
+# F-Droid local build artifacts (never commit)
+keystore.p12
+*.p12
+registry-signing.pem
+*.sig.json.bak
+archive/
+repo/
+tmp/
+deepseek/
+
+# AAB build output (uploaded to Play Store, not committed)
+*.aab
+
+# Private documents (never commit — personal vision/research, not public)
+docs/SAMUI_MANIFESTO.md
+
+# Private development plans — not for GitHub
+docs/GHOST_V2_PLAN.md
+docs/SITD_Theory_Overview_Revised.md
+docs/FDROID_REVIEW_PLAYBOOK.md
+docs/GHOST_SEARCH_INFRASTRUCTURE_ANALYSIS.md
+docs/GHOST_LEGAL_POSTURE.md
+docs/GHOST_DESIGN_PHILOSOPHY.md
+docs/GHOST_SCIENTIFIC_FEATURES.md
+docs/GHOST_RESEARCH_NODE_BLUEPRINT.md
+docs/GHOST_V4_SECURITY_ARCHITECTURE.md
+
+# Runtime telemetry — never tracked (.devin itself is tracked: hooks/rules/skills)
+.devin/hooks/*.jsonl
+coverage/
+
+# local runtime artifacts (not for distribution)
+.brain-journals/
+data/
+pics/
+openclaw.json
+openclaw.runtime.json
+settings.json
+settings.json.backup

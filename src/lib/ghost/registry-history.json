@@ -1,0 +1,16 @@
+{
+  "chain": [
+    {
+      "version": 1,
+      "contentHash": "sha256:d7de69dc058cf73a4ceb0cb02f00f5f8ef68f3e4d1f6a50fb84351a2e8639d0b",
+      "signedAt": "2026-10-25T00:00:00.000Z"
+    },
+    {
+      "version": 2,
+      "contentHash": "sha256:c659a1449c72907fb475c82d105b14b962fb7684e20671b20276010d9fbea832",
+      "previousHash": "sha256:d7de69dc058cf73a4ceb0cb02f00f5f8ef68f3e4d1f6a50fb84351a2e8639d0b",
+      "sequence": 1,
+      "signedAt": "2026-10-26T20:14:16.772Z"
+    }
+  ]
+}

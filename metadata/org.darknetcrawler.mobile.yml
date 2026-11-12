@@ -1,0 +1,103 @@
+Categories:
+  - Internet
+  - Security
+License: GPL-3.0-or-later
+AuthorName: Joerg Bollwahn
+AuthorWebSite: https://codeberg.org/sookoothaii
+WebSite: https://codeberg.org/sookoothaii/digital-spyglass-android
+SourceCode: https://codeberg.org/sookoothaii/digital-spyglass-android
+IssueTracker: https://codeberg.org/sookoothaii/digital-spyglass-android/issues
+Changelog: https://codeberg.org/sookoothaii/digital-spyglass-android/releases
+
+AutoName: Ghost Search
+Description: |-
+  Ghost is a stateless Android onion meta-search client. It queries 13 public
+  onion search engines in parallel, aggregates and ranks the results, and hands
+  off links to Tor Browser via external intent.
+
+  '''Key features:'''
+  * 13 onion search engines queried in parallel
+  * RAM-only session — no queries, results, or history written to disk
+  * Three purge triggers: panic wipe, screen lock, app exit
+  * VPN gate — non-dismissible, blocks queries unless Orbot VPN is active
+  * Tor SOCKS5 transport with remote DNS via Tor
+  * FLAG_SECURE — blocks screenshots and recents thumbnails
+  * No backend, no telemetry, no accounts, no ads
+  * Stop button to cancel running searches
+  * Consent gate with 18+ verification, shown every session
+  * External link handoff to Tor Browser
+
+  '''Requirements:'''
+  * Android 7.0+ (API 24)
+  * Orbot in VPN mode
+  * Tor Browser for Android (for opening result links)
+
+  '''Privacy:'''
+  No data collected, stored, or transmitted to any server. Queries and results
+  exist only in RAM during the active session. Only non-sensitive preferences
+  are persisted: engine selection, snippet filter, VPN requirement, Tor SOCKS
+  host/port, paranoid/fast/QARF/blacklist toggles, and a consent flag that is
+  reset on every start.
+
+RepoType: git
+Repo: https://codeberg.org/sookoothaii/digital-spyglass-android.git
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: v1.0.0
+    subdir: android
+    sudo:
+      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+      - apt-get update
+      - apt-get install -y -t forky nodejs
+      - npm install -g bun
+    init:
+      - cd ..
+      - bun install
+      - bun run build:mobile
+      - bunx cap sync android
+    gradle:
+      - yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+    scanignore:
+      - node_modules/nitro/dist/THIRD-PARTY-LICENSES.md.gz
+      - node_modules/nitro/dist/node_modules/source-map/lib/mappings.wasm
+      - node_modules/source-map/lib/mappings.wasm
+      - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
+      - node_modules/@capacitor/cli/assets/ios-pods-template.tar.gz
+      - node_modules/@capacitor/cli/assets/ios-spm-template.tar.gz
+      - node_modules/@capacitor/cli/assets/android-template.tar.gz
+      - node_modules/@capacitor/cli/assets/capacitor-cordova-ios-plugins.tar.gz
+
+MaintainerNotes: |-
+  Bun is used for JS dependency management and the Vite web build. The web
+  assets are built with `bun run build:mobile` and synced to Android with
+  `bunx cap sync android` before the Gradle build.
+
+  Node.js 22+ is required by Capacitor 8 CLI (`bunx cap sync android` fails
+  with "The Capacitor CLI requires NodeJS >=22.0.0" on older versions).
+  Debian's default nodejs is too old. We install nodejs from the Debian
+  "forky" repository which provides Node.js 24.x.
+
+  The key files (key.properties, release-keystore.jks) are gitignored and
+  not in the repo, so no `rm:` is needed. F-Droid builds from a clean
+  checkout and signs with its own key.
+
+  scanignore covers gzip/wasm binaries in node_modules that are legit
+  dependencies (Capacitor templates, source-map WASM, nitro licenses).
+
+  The authoritative F-Droid recipe lives in fdroiddata MR !46224 and uses
+  Binaries: + AllowedAPKSigningKeys (F-Droid distributes the upstream-signed
+  APK after verifying a byte-identical rebuild). This in-repo copy is a
+  from-source recipe kept for reference; the Builds entry below is the
+  historical v1.0 build.
+
+  Summary, description, title, icon, screenshots, and changelogs are
+  provided via Fastlane structure in the app's own repository at
+  fastlane/metadata/android/en-US/ and will be pulled automatically.
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '4.0.1'
+CurrentVersionCode: 11

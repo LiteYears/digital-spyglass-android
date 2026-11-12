@@ -1,0 +1,3 @@
+v3.0.2
+
+• Eliminados los plugins Capacitor de biometría y almacenamiento seguro sin usar, de modo que los permisos USE_BIOMETRIC y USE_FINGERPRINT ya no se solicitan en el manifiesto combinado

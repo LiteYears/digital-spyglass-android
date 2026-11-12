@@ -1,0 +1,6 @@
+v4.0.0
+
+• Strict Tor v3 .onion enforcement on every redirect hop & RFC 3986 ASCII URI encoding
+• Native anti-forensic panic wipe (WebView/cache shred, finishAndRemoveTask, hard process kill) + Guardian Project PanicKit responder
+• Cryptographic Tor v3 SHA3-256 address & vanity-clone verification + SimHash mirror clustering
+• Passphrase-authenticated AES-256-GCM (PBKDF2 210k + AAD) RAM export & scoped FileProvider paths

@@ -1,0 +1,40 @@
+# Weekly engine health probe — replays each engine's real request path
+# (incl. prepare flows) through Tor, updates engines.json health fields.
+#
+# Report-only by default. When the repo secret CODEBERG_PUSH_TOKEN (write
+# scope) exists, results are committed to branch `ci/engine-health` — never
+# directly to main; the operator merges or closes the branch. The pipeline
+# exits 2 when >=50% of probed engines are down, so Codeberg notifies.
+#
+# Wire-up: Codeberg repo Settings -> CI -> Cron Jobs -> schedule weekly,
+# pipeline: engines-health, branch: main.
+
+steps:
+  probe:
+    image: oven/bun:1
+    commands:
+      - apt-get update -qq && apt-get install -y -qq tor curl git
+      - tor --RunAsDaemon 1 --SocksPort 9050
+      - |
+        for i in $(seq 1 24); do
+          curl --socks5-hostname 127.0.0.1:9050 -sS -m 10 -o /dev/null https://check.torproject.org/ && break
+          sleep 5
+        done
+      - bun scripts/engine-healthcheck.mjs --write --proxy 127.0.0.1:9050 --query HORMUZ
+      - bun scripts/verify-registry.mjs
+      - |
+        if [ -n "$CODEBERG_PUSH_TOKEN" ] && ! git diff --quiet src/lib/ghost/engines.json; then
+          bunx prettier --write src/lib/ghost/engines.json
+          git config user.email "ci@codeberg.org" && git config user.name "ci-engines-health"
+          git add src/lib/ghost/engines.json
+          git commit -m "engines: weekly health probe (report-only, operator review)"
+          git push "https://ci:${CODEBERG_PUSH_TOKEN}@codeberg.org/sookoothaii/digital-spyglass-android.git" HEAD:ci/engine-health
+        else
+          echo "no changes or no push token - report only"
+        fi
+    environment:
+      CODEBERG_PUSH_TOKEN:
+        from_secret: codeberg_push_token
+
+when:
+  event: cron

@@ -1,0 +1,1 @@
+Fixes from external protocol review: queries with spaces or non-ASCII characters no longer get double-encoded before reaching engines; truncated engine responses now surface as errors instead of partial results; 307/308 redirects preserve POST same-origin and are rejected cross-host when carrying a request body.

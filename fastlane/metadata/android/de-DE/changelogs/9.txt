@@ -1,0 +1,3 @@
+v3.0.2
+
+• Entfernt ungenutzte Biometric- und Secure-Storage-Capacitor-Plugins, damit die Berechtigungen USE_BIOMETRIC und USE_FINGERPRINT im gemergten Manifest nicht mehr angefordert werden

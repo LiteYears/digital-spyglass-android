@@ -1,0 +1,7 @@
+Version initiale v1.0.0
+
+• 13 moteurs de recherche onion interrogés en parallèle via Tor
+• Session en RAM uniquement — aucune donnée écrite sur disque
+• Déclencheurs de purge : effacement panique, verrouillage écran, sortie de l'application
+• Verrou VPN — bloque les requêtes tant que le VPN Orbot n'est pas actif
+• Aucun backend, aucune télémétrie, aucun compte, aucune publicité
